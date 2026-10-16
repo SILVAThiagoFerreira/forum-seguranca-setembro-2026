@@ -140,7 +140,7 @@
       var lb = logos.enaexBranco || logos.enaex;
       var ab = tamanhoPng(lb);
       s.addImage({ data: lb, x: 0.55, y: 0.4, w: 0.6 * ab.w / ab.h, h: 0.6 });
-      texto(s, d.meta.evento.toUpperCase(), 3.3, 4.95, 9.5, 0.8, { fontSize: 38, color: C.branco, align: 'right', valign: 'middle' });
+      texto(s, String(d.meta.evento || '34º Fórum de Segurança').toUpperCase(), 3.3, 4.95, 9.5, 0.8, { fontSize: 38, color: C.branco, align: 'right', valign: 'middle' });
       texto(s, d.meta.gerencia, 3.3, 5.8, 9.5, 0.4, { fontSize: 18, color: C.branco, align: 'right' });
       texto(s, d.meta.periodo, 3.3, 6.25, 9.5, 0.35, { fontSize: 14, bold: true, color: 'C9A227', align: 'right' });
       texto(s, 'STRICTLY PRIVATE AND CONFIDENTIAL', X0, 7.02, W, 0.25, { fontSize: 9, color: C.branco, align: 'right' });

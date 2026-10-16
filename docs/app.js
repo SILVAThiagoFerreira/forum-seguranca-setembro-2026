@@ -781,7 +781,7 @@
         no = no[p];
       });
     }
-    if (!raiz.aderencia || !raiz.vct || !raiz.cronograma) throw new Error('estrutura inesperada');
+    if (!raiz.meta || !raiz.meta.evento || !raiz.meta.gerencia || !raiz.aderencia || !raiz.vct || !raiz.cronograma) throw new Error('estrutura inesperada');
     return raiz;
   }
 
