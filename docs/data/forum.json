@@ -1,0 +1,259 @@
+{
+  "meta": {
+    "evento": "34º Fórum de Segurança",
+    "gerencia": "Gerência de Mineração Nordeste/Underground",
+    "periodo": "Setembro 2026",
+    "referencia": "Agosto 2026",
+    "aviso": "Dados fictícios, usados apenas para validar o layout do dashboard."
+  },
+  "pauta": [
+    "Valores corporativos",
+    "Setembro Amarelo",
+    "Procedimento de Bloqueio e Sinalização de Energias",
+    "Aderência – Treinamentos Obrigatórios",
+    "Acompanhamento de VCT's",
+    "Registros de Desvios",
+    "GT Flyrock e Misfire",
+    "Ocorrências internas",
+    "Boas práticas e Kaizens",
+    "Avisos e Encerramento"
+  ],
+  "aderencia": {
+    "titulo": "Aderência por unidade (%)",
+    "subtitulo": "Treinamentos obrigatórios de requisito interno, legal e de cliente. Filtro de 30 dias.",
+    "meta": 97,
+    "unidades": [
+      { "nome": "US Jacobina", "valor": 89.2 },
+      { "nome": "US Caraíba", "valor": 98.4 },
+      { "nome": "US Vanádio", "valor": 97.6 },
+      { "nome": "US Avanço Pedra Branca", "valor": 97.8 },
+      { "nome": "US Nexa Aripuanã", "valor": 97.2 },
+      { "nome": "US Vale Verde", "valor": 100 },
+      { "nome": "US Atlantic Nickel", "valor": 99.1 },
+      { "nome": "US PA Gold", "valor": 100 },
+      { "nome": "US Borborema", "valor": 98.7 },
+      { "nome": "US Ferbasa", "valor": 98 }
+    ]
+  },
+  "vct": {
+    "quantidades": {
+      "titulo": "Quantidades realizadas por unidade",
+      "referencia": "Agosto 2026",
+      "unidades": [
+        { "nome": "US Jacobina", "tecnicos": 2, "supervisores": 1, "planejado": 3 },
+        { "nome": "US Caraíba", "tecnicos": 3, "supervisores": 1, "planejado": 4 },
+        { "nome": "US Vanádio", "tecnicos": 1, "supervisores": 0, "planejado": 2 },
+        { "nome": "US Avanço Pedra Branca", "tecnicos": 2, "supervisores": 1, "planejado": 3 },
+        { "nome": "US Nexa Aripuanã", "tecnicos": 3, "supervisores": 2, "planejado": 4 },
+        { "nome": "US Vale Verde", "tecnicos": 2, "supervisores": 1, "planejado": 3 },
+        { "nome": "US Atlantic Nickel UG", "tecnicos": 2, "supervisores": 0, "planejado": 3 },
+        { "nome": "US Atlantic Nickel OP", "tecnicos": 1, "supervisores": 1, "planejado": 3 },
+        { "nome": "US Borborema", "tecnicos": 0, "supervisores": 0, "planejado": 2 },
+        { "nome": "US Ferbasa", "tecnicos": 1, "supervisores": 1, "planejado": 2 }
+      ]
+    },
+    "auditorias": {
+      "titulo": "Resultados das auditorias",
+      "referencia": "Agosto 2026",
+      "meta": 90,
+      "procedimentos": [
+        { "nome": "Carga e descarga de emulsão (P036.06)", "conforme": 2, "naoConforme": 0, "desvio": "" },
+        { "nome": "Desmonte em mineração subterrânea e túneis (P036.35)", "conforme": 2, "naoConforme": 0, "desvio": "" },
+        { "nome": "Inspeção em tanques de emulsão base (OPERACOES.01)", "conforme": 3, "naoConforme": 0, "desvio": "" },
+        { "nome": "Preparo da solução de nitrito de sódio (P0056.02.11)", "conforme": 1, "naoConforme": 1, "desvio": "Segregação incorreta dos sacos de nitrito de sódio." },
+        { "nome": "Carregamento de desmontes a céu aberto (P036.02)", "conforme": 4, "naoConforme": 0, "desvio": "" },
+        { "nome": "Operação de UMB em mina subterrânea (OPERACOES.05)", "conforme": 2, "naoConforme": 0, "desvio": "" },
+        { "nome": "Medição de densidade de amostras em campo", "conforme": 1, "naoConforme": 0, "desvio": "" },
+        { "nome": "Prestação de serviço, aplicação de produto (P036.23)", "conforme": 1, "naoConforme": 0, "desvio": "" },
+        { "nome": "Recebimento de emulsão e carregamento de UMB (P036.22)", "conforme": 1, "naoConforme": 0, "desvio": "" },
+        { "nome": "Transporte de explosivos e acessórios (P036.01)", "conforme": 1, "naoConforme": 0, "desvio": "Necessidade de reciclagem de treinamento teórico e prático." }
+      ]
+    }
+  },
+  "desvios": {
+    "titulo": "Nº de desvios",
+    "referencia": "Agosto 2026",
+    "porGerencia": [
+      { "nome": "US Atlantic Nickel OP", "valor": 120 },
+      { "nome": "US Nexa Aripuanã", "valor": 98 },
+      { "nome": "US Jacobina", "valor": 54 },
+      { "nome": "US Vale Verde", "valor": 46 },
+      { "nome": "US Caraíba", "valor": 27 },
+      { "nome": "US Borborema", "valor": 18 },
+      { "nome": "US Atlantic Nickel UG", "valor": 14 },
+      { "nome": "US Vanádio", "valor": 12 },
+      { "nome": "US Pedra Branca", "valor": 11 },
+      { "nome": "US Ferbasa", "valor": 6 },
+      { "nome": "US PA Gold", "valor": 4 },
+      { "nome": "US NX Gold", "valor": 2 }
+    ],
+    "porCategoria": [
+      { "nome": "Regras de trabalho, procedimentos e instruções", "valor": 105 },
+      { "nome": "Equipamentos móveis", "valor": 81 },
+      { "nome": "Ferramentas e equipamentos", "valor": 72 },
+      { "nome": "Ordem e limpeza (5S)", "valor": 64 },
+      { "nome": "Trânsito de veículos e pessoas", "valor": 47 },
+      { "nome": "EPI ou EPC", "valor": 27 },
+      { "nome": "Ergonomia", "valor": 9 },
+      { "nome": "BOS", "valor": 3 },
+      { "nome": "Qualidade", "valor": 2 },
+      { "nome": "Meio ambiente", "valor": 2 }
+    ],
+    "gut": {
+      "titulo": "Desvios por GUT",
+      "total": 300,
+      "classes": [
+        { "nome": "Baixa", "valor": 240 },
+        { "nome": "Média", "valor": 52 },
+        { "nome": "Alta", "valor": 8 }
+      ],
+      "notas": [
+        { "nota": 3, "valor": 20 },
+        { "nota": 4, "valor": 30 },
+        { "nota": 5, "valor": 60 },
+        { "nota": 6, "valor": 130 },
+        { "nota": 7, "valor": 20 },
+        { "nota": 8, "valor": 18 },
+        { "nota": 9, "valor": 14 },
+        { "nota": 10, "valor": 3 },
+        { "nota": 11, "valor": 2 },
+        { "nota": 12, "valor": 1 },
+        { "nota": 13, "valor": 1 },
+        { "nota": 14, "valor": 1 },
+        { "nota": 15, "valor": 0 }
+      ],
+      "altoPorGerencia": [
+        { "nome": "Gerência Underground/Nordeste", "valor": 4 },
+        { "nome": "US Nexa Aripuanã", "valor": 2 },
+        { "nome": "US Atlantic Nickel OP", "valor": 1 },
+        { "nome": "US Vanádio", "valor": 1 }
+      ]
+    }
+  },
+  "okr": {
+    "titulo": "OKR 2026: Promover a segurança",
+    "indicador": "Conclusão dos planos de ação (desvios GUT médio/alto)",
+    "unidade": "%",
+    "meta": 96,
+    "kpis": [
+      { "nome": "Gate", "valor": 93 },
+      { "nome": "Appropriated", "valor": 96 },
+      { "nome": "Exceeded", "valor": 98 }
+    ],
+    "meses": [
+      { "mes": "Jan", "valor": 71 },
+      { "mes": "Fev", "valor": 66 },
+      { "mes": "Mar", "valor": 70 },
+      { "mes": "Abr", "valor": 74 },
+      { "mes": "Mai", "valor": 62 },
+      { "mes": "Jun", "valor": 58 },
+      { "mes": "Jul", "valor": 49 },
+      { "mes": "Ago", "valor": 41 }
+    ]
+  },
+  "flyrock": {
+    "titulo": "Linha do tempo Flyrock",
+    "ano": 2026,
+    "mensal": [0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0],
+    "classes": [
+      { "nome": "Além dos limites do cliente / ultralançamento comunidade", "cor": "vermelho", "valor": 0 },
+      { "nome": "Além da zona de exclusão de pessoas / ultralançamento crítico", "cor": "laranja", "valor": 0 },
+      { "nome": "Além da zona de exclusão de máquinas / ultralançamento com ou sem danos", "cor": "verde", "valor": 1 },
+      { "nome": "50% da zona de exclusão de máquinas / projeção (throw)", "cor": "azul", "valor": 1 }
+    ],
+    "desviosRelacionados": 2,
+    "eventos": [
+      "US Unidade A (13/08): fragmento projetado após detonação na cava atingiu estrutura do canteiro avançado, sem pessoas no local. Distância máxima do fragmento: 373 m."
+    ]
+  },
+  "misfire": {
+    "titulo": "Linha do tempo Misfire",
+    "ano": 2026,
+    "mensal": [4, 5, 3, 2, 6, 4, 6, 4, 0, 0, 0, 0],
+    "classes": [
+      { "nome": "Explosivo falhado detonou fora da pilha", "cor": "vermelho", "valor": 0 },
+      { "nome": "Explosivo falhado encontrado fora da pilha ou detonou na pilha", "cor": "laranja", "valor": 2 },
+      { "nome": "Explosivo falhado encartuchado ou emulsão encontrado na pilha", "cor": "verde", "valor": 19 },
+      { "nome": "Falha ou corte na iniciação assistida, reiniciado ou não", "cor": "azul", "valor": 13 }
+    ],
+    "desviosRelacionados": 3,
+    "eventos": [
+      "US Unidade B (06/08): cápsula deflagrada na lavra durante o carregamento.",
+      "US Unidade C (08/08): misfire identificado na frente de desmonte e isolado pela equipe.",
+      "US Unidade D (11/08): pressão dinâmica registrada fora do previsto no sistema de carregamento.",
+      "US Unidade E (16/08): encartuchado encontrado no material desmontado, recolhido com segurança.",
+      "US Unidade F (28/08): misfire na malha de desmonte, reprocessado conforme procedimento."
+    ]
+  },
+  "cruzVerde": {
+    "titulo": "Cruz Verde",
+    "mes": "Agosto 2026",
+    "dias": [
+      "ok", "ok", "ok", "ok", "ok", "dano_pessoal", "ok", "ok", "ok", "ok",
+      "ok", "ok", "ocorrencia", "ok", "ok", "ok", "ocorrencia", "ocorrencia", "ok", "ok",
+      "ok", "ok", "ok", "ok", "ok", "ok", "ocorrencia", "ok", "ocorrencia", "ok", "ok"
+    ],
+    "danosPessoais": [
+      { "data": "06/08", "descricao": "Colaborador com lesão leve após contato com porta de armário." }
+    ],
+    "danosMateriais": [
+      { "data": "13/08", "descricao": "Trinca no para-brisa de UMB." },
+      { "data": "17/08", "descricao": "Dois cartuchos não detonados encontrados após desmonte." },
+      { "data": "18/08", "descricao": "Trinca no para-brisa de UMB." },
+      { "data": "26/08", "descricao": "Rompimento de disco de ruptura." },
+      { "data": "28/08", "descricao": "Danos na gaiola de UMB." }
+    ]
+  },
+  "boasPraticas": {
+    "titulo": "Boas práticas: atividades",
+    "unidade": "US Nexa Aripuanã",
+    "referencia": "Agosto 2026",
+    "indicadores": [
+      { "nome": "Percepção de risco", "valor": 4 },
+      { "nome": "Direitos de recusa", "valor": 2 },
+      { "nome": "VRC verificadas", "valor": 9 },
+      { "nome": "PRC realizado", "valor": 3 }
+    ]
+  },
+  "kaizen": {
+    "titulo": "Acumulados Kaizen",
+    "periodo": "Outubro de 2024 a Agosto de 2026",
+    "anterior": 240,
+    "unidades": [
+      { "nome": "Atlantic Níquel", "valor": 52 },
+      { "nome": "Vale Verde", "valor": 41 },
+      { "nome": "Jacobina", "valor": 39 },
+      { "nome": "Caraíba", "valor": 33 },
+      { "nome": "Vanádio", "valor": 29 },
+      { "nome": "Nexa Aripuanã", "valor": 26 },
+      { "nome": "Avanço Pedra Branca", "valor": 18 },
+      { "nome": "Borborema", "valor": 12 },
+      { "nome": "Ferbasa", "valor": 7 },
+      { "nome": "PA Gold", "valor": 4 },
+      { "nome": "NX Gold", "valor": 1 }
+    ]
+  },
+  "inspecoesCruzadas": {
+    "titulo": "Cronograma de inspeções cruzadas UG/NE 2026",
+    "colunas": ["MAI", "JUN", "JUL", "AGO", "SET", "OUT", "NOV", "DEZ"],
+    "responsavel": ["US Ferbasa", "US Vanádio", "US Vale Verde", "US Borborema; US Caraíba", "US Pedra Branca", "PA Gold", "US NX Gold", "US Jacobina; US Nexa Aripuanã"],
+    "inspecionada": ["PA Gold", "US Caraíba", "US Atlantic Nickel OP e UG", "US Vanádio; US Vale Verde", "US Nexa Aripuanã", "US Jacobina", "US Pedra Branca", "US NX Gold; US Ferbasa"],
+    "status": ["S", "S", "S", "N", "S", "P", "P", "P"]
+  },
+  "cronograma": {
+    "titulo": "Cronograma de apresentações do Fórum 2026",
+    "itens": [
+      { "mes": "Fevereiro 2026", "apresentador": "Ana Souza", "unidade": "US Vale Verde", "status": "realizado" },
+      { "mes": "Março 2026", "apresentador": "Marcos Lima", "unidade": "US Jacobina", "status": "realizado" },
+      { "mes": "Abril 2026", "apresentador": "Carla Nunes", "unidade": "US Vanádio", "status": "realizado" },
+      { "mes": "Maio 2026", "apresentador": "Paulo Teixeira", "unidade": "US Pedra Branca", "status": "realizado" },
+      { "mes": "Junho 2026", "apresentador": "", "unidade": "", "status": "sem_forum" },
+      { "mes": "Julho 2026", "apresentador": "Renata Alves", "unidade": "US Vale Verde", "status": "realizado" },
+      { "mes": "Agosto 2026", "apresentador": "Bruno Costa", "unidade": "US Atlantic Nickel", "status": "realizado" },
+      { "mes": "Setembro 2026", "apresentador": "Júlia Martins", "unidade": "Frotas", "status": "realizado" },
+      { "mes": "Outubro 2026", "apresentador": "Diego Ramos", "unidade": "US Caraíba", "status": "pendente" },
+      { "mes": "Novembro 2026", "apresentador": "Patrícia Gomes", "unidade": "US Nexa Aripuanã", "status": "pendente" },
+      { "mes": "Dezembro 2026", "apresentador": "Rafael Duarte", "unidade": "", "status": "pendente" }
+    ]
+  }
+}

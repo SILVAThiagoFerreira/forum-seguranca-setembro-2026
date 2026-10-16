@@ -1,0 +1,7 @@
+# Publica somente o site (pasta docs/) e estes arquivos.
+# Todo o resto da pasta de trabalho (planilhas, PDFs, pasta VISUAL) fica fora do repositório.
+*
+!.gitignore
+!README.md
+!docs/
+!docs/**
