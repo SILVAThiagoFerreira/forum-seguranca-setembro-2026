@@ -38,9 +38,6 @@ body {
 }
 .marcas { display: flex; align-items: center; gap: 14px; flex: none; }
 .logo-enaex { height: 30px; width: auto; display: block; }
-.divisor { width: 1px; height: 28px; background: rgba(255, 255, 255, .35); }
-.logo-chip { background: #fff; border-radius: 4px; padding: 4px 8px; display: flex; align-items: center; }
-.logo-chip img { height: 26px; width: auto; display: block; }
 .rotulo-grafico { margin: 0 0 6px; font-size: 13px; font-weight: 700; color: var(--ink); }
 .topo h1 { margin: 0; flex: 1; font-size: 17px; font-weight: 500; text-align: center; }
 .topo-sub { opacity: .75; font-weight: 400; }
@@ -202,7 +199,6 @@ table.tabela td.centro, table.tabela th.centro { text-align: center; }
   .topo { flex-wrap: wrap; padding: 10px 12px; gap: 10px; }
   .topo h1 { order: 3; flex-basis: 100%; text-align: left; }
   .logo-enaex { height: 24px; }
-  .logo-chip img { height: 20px; }
   .btn-pptx { margin-left: auto; }
   .bloco { padding: 16px; }
   .cabecalho-pagina h2.titulo-pagina { font-size: 22px; }

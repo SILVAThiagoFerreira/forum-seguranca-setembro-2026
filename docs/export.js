@@ -38,9 +38,9 @@
   }
 
   function obterLogos(opcoes) {
-    if (opcoes && opcoes.logos && opcoes.logos.enaex && opcoes.logos.mvv) return Promise.resolve(opcoes.logos);
-    return Promise.all([buscarImagem('assets/enaex.png'), buscarImagem('assets/mvv.png')]).then(function (r) {
-      return { enaex: r[0], mvv: r[1] };
+    if (opcoes && opcoes.logos && opcoes.logos.enaex) return Promise.resolve(opcoes.logos);
+    return buscarImagem('assets/enaex.png').then(function (enaex) {
+      return { enaex: enaex };
     });
   }
 
@@ -51,13 +51,10 @@
   }
 
   function logosTopo(s, L, ctx) {
-    var a = ctx.dim.enaex, b = ctx.dim.mvv;
-    var hl = 0.7;
-    var wm = hl * b.w / b.h, hm = hl;
-    var we = hl * a.w / a.h, he = hl;
-    var xm = X1 - wm, xe = xm - 0.3 - we;
-    s.addImage({ data: L.mvv, x: xm, y: 0.35, w: wm, h: hm });
-    s.addImage({ data: L.enaex, x: xe, y: 0.35, w: we, h: he });
+    var a = ctx.dim.enaex;
+    var he = 0.7;
+    var we = he * a.w / a.h;
+    s.addImage({ data: L.enaex, x: X1 - we, y: 0.35, w: we, h: he });
   }
 
   function rodape(s) {
@@ -131,7 +128,7 @@
       var pptx = new Ctor();
       pptx.layout = 'LAYOUT_WIDE';
       pptx.title = d.meta.evento + ' - ' + d.meta.periodo;
-      var ctx = { logos: logos, dim: { enaex: tamanhoPng(logos.enaex), mvv: tamanhoPng(logos.mvv) } };
+      var ctx = { logos: logos, dim: { enaex: tamanhoPng(logos.enaex) } };
       var s, i;
       var ref = d.meta.referencia;
 

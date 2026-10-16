@@ -11,6 +11,6 @@ Dashboard estático dos gráficos do fórum (Gerência de Mineração Nordeste/U
 - `docs/index.html`, `docs/styles.css`: layout no modelo de página web e identidade visual Enaex.
 - `docs/app.js`: seções e gráficos (Chart.js).
 - `docs/export.js`: geração do PowerPoint (pptxgenjs).
-- `docs/assets/`: logos Enaex e Mineração Vale Verde.
+- `docs/assets/`: logos Enaex.
 
 Publicado pela branch `main`, pasta `/docs`.
