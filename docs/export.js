@@ -3,7 +3,7 @@
 
   var C = {
     verm: 'B5121B', rosa: 'E2B4B8', escuro: '3D4248', medio: '8B9096', claro: 'C4C8CC',
-    verde: '2E7D4F', laranja: 'E07B20', amarelo: 'E0A526', azul: '2F6690',
+    verde: '3D4248', laranja: 'E30613', amarelo: 'E2B4B8', azul: '8B9096',
     linha: 'DADDE1', zebra: 'F2F3F5', branco: 'FFFFFF'
   };
   var FONT = 'Arial';

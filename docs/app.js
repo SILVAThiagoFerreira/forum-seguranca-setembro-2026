@@ -3,14 +3,14 @@
 
   // Paleta do site (Enaex): ardósia da capa + vermelho da marca + tons das lâminas clean
   const COR = {
-    ok: '#2e7d4f',
-    alerta: '#e07b20',
-    amarelo: '#e0a526',
+    ok: '#3d4248',
+    alerta: '#e30613',
+    amarelo: '#e2b4b8',
     vermelho: '#b5121b',
     ardosia: '#3d4248',
     cinza: '#8b9096',
     cinzaClaro: '#c4c8cc',
-    azul: '#2f6690',
+    azul: '#8b9096',
     grade: '#eceef1'
   };
   const COR_CLASSE = { vermelho: COR.vermelho, laranja: COR.alerta, verde: COR.ok, azul: COR.azul };
