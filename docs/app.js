@@ -736,14 +736,70 @@
     });
   }
 
+  // ---------- planilha Google (aba com colunas caminho,valor) ----------
+  const SHEET_ID = '1nsusLCjD46bmaYTDaXw_P32eqveTOpsz5Ago3z03V2s';
+
+  function parseCsv(texto) {
+    const linhas = [];
+    let campo = '', linha = [], aspas = false;
+    for (let i = 0; i < texto.length; i++) {
+      const c = texto[i];
+      if (aspas) {
+        if (c === '"' && texto[i + 1] === '"') { campo += '"'; i++; }
+        else if (c === '"') aspas = false;
+        else campo += c;
+      } else if (c === '"') aspas = true;
+      else if (c === ',') { linha.push(campo); campo = ''; }
+      else if (c === '\n' || c === '\r') {
+        if (c === '\r' && texto[i + 1] === '\n') i++;
+        linha.push(campo); campo = '';
+        linhas.push(linha); linha = [];
+      } else campo += c;
+    }
+    if (campo || linha.length) { linha.push(campo); linhas.push(linha); }
+    return linhas;
+  }
+
+  function tipar(v) {
+    return v !== '' && !isNaN(Number(v)) ? Number(v) : v;
+  }
+
+  async function carregarPlanilha() {
+    const url = 'https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/gviz/tq?tqx=out:csv&_=' + Date.now();
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const linhas = parseCsv(await resp.text()).slice(1).filter((l) => l[0]);
+    if (linhas.length < 50) throw new Error('planilha vazia');
+    const raiz = {};
+    for (const [caminho, valor] of linhas) {
+      const partes = caminho.split('.');
+      let no = raiz;
+      partes.forEach((p, i) => {
+        const ultimo = i === partes.length - 1;
+        if (ultimo) { no[p] = tipar(valor === undefined ? '' : valor); return; }
+        if (no[p] === undefined) no[p] = /^\d+$/.test(partes[i + 1]) ? [] : {};
+        no = no[p];
+      });
+    }
+    if (!raiz.aderencia || !raiz.vct || !raiz.cronograma) throw new Error('estrutura inesperada');
+    return raiz;
+  }
+
   // ---------- início ----------
   async function iniciar() {
     const conteudo = document.getElementById('conteudo');
     let dados;
     try {
-      const resp = await fetch('data/forum.json', { cache: 'no-cache' });
-      if (!resp.ok) throw new Error('HTTP ' + resp.status);
-      dados = await resp.json();
+      dados = await carregarPlanilha();
+    } catch (e0) {
+      console.warn('Planilha indisponível, usando data/forum.json:', e0);
+    }
+    try {
+      if (!dados) {
+        const resp = await fetch('data/forum.json', { cache: 'no-cache' });
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        dados = await resp.json();
+      }
     } catch (e) {
       conteudo.replaceChildren(h('p', { class: 'erro' }, 'Não foi possível carregar os dados (data/forum.json). ' + e.message));
       return;

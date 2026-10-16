@@ -39,8 +39,8 @@
 
   function obterLogos(opcoes) {
     if (opcoes && opcoes.logos && opcoes.logos.enaex) return Promise.resolve(opcoes.logos);
-    return buscarImagem('assets/enaex.png').then(function (enaex) {
-      return { enaex: enaex };
+    return Promise.all([buscarImagem('assets/enaex.png'), buscarImagem('assets/enaex-white.png')]).then(function (r) {
+      return { enaex: r[0], enaexBranco: r[1] };
     });
   }
 
@@ -58,7 +58,7 @@
   }
 
   function rodape(s) {
-    s.addShape('line', { x: X0, y: 6.95, w: W, h: 0, line: { color: C.escuro, width: 2 } });
+    s.addShape('line', { x: X0, y: 6.95, w: W, h: 0, line: { color: C.claro, width: 1 } });
     texto(s, 'STRICTLY PRIVATE AND CONFIDENTIAL', X0, 7.02, W, 0.25, { fontSize: 9, color: C.medio, align: 'right' });
   }
 
@@ -66,8 +66,8 @@
   function lamina(pptx, ctx, o) {
     var s = pptx.addSlide();
     s.background = { color: C.branco };
-    texto(s, String(o.titulo).toUpperCase(), X0, 0.35, 8.3, 0.65, { fontSize: 30, bold: true, color: C.verm, valign: 'top', fit: 'shrink' });
-    if (o.sub) texto(s, o.sub, X0, 1.05, 8.3, 0.35, { fontSize: 16 });
+    texto(s, String(o.titulo), X0, 0.35, 8.3, 0.55, { fontSize: 24, bold: true, color: '23292F', valign: 'top', fit: 'shrink' });
+    if (o.sub) texto(s, o.sub, X0, 0.95, 8.3, 0.35, { fontSize: 14, color: '6B7280' });
     logosTopo(s, ctx.logos, ctx);
     var cab = o.cabecalhos || (o.secao ? [{ t: o.secao, x: X0, w: W }] : []);
     cab.forEach(function (c) {
@@ -133,15 +133,18 @@
       var ref = d.meta.referencia;
 
       // 1. Capa
+      // Capa no padrão "Fluxo Operacional": fundo vermelho escuro, diagonal translúcida, logo branca, título à direita
       s = pptx.addSlide();
-      s.background = { color: C.branco };
-      logosTopo(s, logos, ctx);
-      texto(s, d.meta.evento.toUpperCase(), X0, 2.5, 12, 1.0, { fontSize: 44, bold: true, color: C.verm, valign: 'middle' });
-      texto(s, d.meta.periodo, X0, 3.55, 12, 0.6, { fontSize: 28, color: C.escuro });
-      texto(s, d.meta.gerencia, X0, 4.25, 12, 0.5, { fontSize: 18, color: C.escuro });
-      s.addShape('line', { x: X0, y: 4.95, w: 3, h: 0, line: { color: C.verm, width: 3 } });
-      texto(s, d.meta.aviso, X0, 6.55, W, 0.3, { fontSize: 9, color: C.medio });
-      rodape(s);
+      s.background = { color: '7A1013' };
+      s.addShape('rtTriangle', { x: 0, y: 0, w: 13.333, h: 7.5, flipH: true, flipV: false, rotate: 0, fill: { color: 'B5121B', transparency: 78 }, line: { color: 'B5121B', transparency: 100, width: 0 } });
+      var lb = logos.enaexBranco || logos.enaex;
+      var ab = tamanhoPng(lb);
+      s.addImage({ data: lb, x: 0.55, y: 0.4, w: 0.6 * ab.w / ab.h, h: 0.6 });
+      texto(s, d.meta.evento.toUpperCase(), 3.3, 4.95, 9.5, 0.8, { fontSize: 38, color: C.branco, align: 'right', valign: 'middle' });
+      texto(s, d.meta.gerencia, 3.3, 5.8, 9.5, 0.4, { fontSize: 18, color: C.branco, align: 'right' });
+      texto(s, d.meta.periodo, 3.3, 6.25, 9.5, 0.35, { fontSize: 14, bold: true, color: 'C9A227', align: 'right' });
+      texto(s, 'STRICTLY PRIVATE AND CONFIDENTIAL', X0, 7.02, W, 0.25, { fontSize: 9, color: C.branco, align: 'right' });
+      texto(s, d.meta.aviso, X0, 7.02, 8, 0.25, { fontSize: 9, color: 'E5C9CB' });
 
       // 2. Pauta
       s = lamina(pptx, ctx, { titulo: 'Pauta', sub: d.meta.evento + ' - ' + d.meta.periodo, secao: 'Itens da reunião:' });
