@@ -52,9 +52,9 @@
 
   function logosTopo(s, L, ctx) {
     var a = ctx.dim.enaex;
-    var he = 0.7;
+    var he = 0.42;
     var we = he * a.w / a.h;
-    s.addImage({ data: L.enaex, x: X1 - we, y: 0.35, w: we, h: he });
+    s.addImage({ data: L.enaex, x: X1 - we, y: 0.4, w: we, h: he });
   }
 
   function rodape(s) {
@@ -66,30 +66,30 @@
   function lamina(pptx, ctx, o) {
     var s = pptx.addSlide();
     s.background = { color: C.branco };
-    texto(s, String(o.titulo), X0, 0.35, 8.3, 0.55, { fontSize: 24, bold: true, color: '23292F', valign: 'top', fit: 'shrink' });
-    if (o.sub) texto(s, o.sub, X0, 0.95, 8.3, 0.35, { fontSize: 14, color: '6B7280' });
+    texto(s, String(o.titulo), X0, 0.4, 9.5, 0.4, { fontSize: 20, bold: true, color: '23292F', valign: 'top', fit: 'shrink' });
+    if (o.sub) texto(s, o.sub, X0, 0.8, 9.5, 0.3, { fontSize: 11, color: '6B7280' });
     logosTopo(s, ctx.logos, ctx);
     var cab = o.cabecalhos || (o.secao ? [{ t: o.secao, x: X0, w: W }] : []);
     cab.forEach(function (c) {
-      texto(s, c.t, c.x, 1.45, c.w, 0.35, { fontSize: c.fs || 18, valign: 'bottom' });
+      texto(s, c.t, c.x, 1.45, c.w, 0.35, { fontSize: c.fs ? Math.min(c.fs, 13) : 14, valign: 'bottom' });
     });
     if (cab.length) s.addShape('line', { x: X0, y: 1.85, w: W, h: 0, line: { color: C.linha, width: 1 } });
     if (o.nota) {
       var partes = [{ text: 'Atenção,', options: { bold: true } }, { text: ' ' + o.nota }];
-      texto(s, partes, X0, 6.1, W, 0.7, { fontSize: 12 });
+      texto(s, partes, X0, 6.2, W, 0.6, { fontSize: 11 });
     }
     rodape(s);
     return s;
   }
 
   function kpi(s, x, y, w, h, valor, rotulo, cor, fsV) {
-    s.addShape('rect', { x: x, y: y, w: w, h: h, fill: { color: C.branco }, line: { color: C.linha, width: 1 } });
-    texto(s, String(valor), x + 0.05, y + 0.08, w - 0.1, h * 0.55, { fontSize: fsV || 28, bold: true, color: cor || C.verm, align: 'center', valign: 'middle' });
-    texto(s, rotulo, x + 0.08, y + h * 0.6, w - 0.16, h * 0.36, { fontSize: 11, color: C.medio, align: 'center', valign: 'top' });
+    s.addShape('rect', { x: x, y: y, w: w, h: h, fill: { color: C.zebra } });
+    texto(s, String(valor), x + 0.05, y + 0.08, w - 0.1, h * 0.55, { fontSize: Math.round((fsV || 28) * 0.8), bold: true, color: cor || C.verm, align: 'center', valign: 'middle' });
+    texto(s, rotulo, x + 0.08, y + h * 0.6, w - 0.16, h * 0.36, { fontSize: 10, color: C.medio, align: 'center', valign: 'top' });
   }
 
   function cab(t, extra) {
-    var o = { bold: true, color: C.branco, fill: { color: C.escuro }, fontSize: 11, fontFace: FONT, valign: 'middle' };
+    var o = { bold: true, color: C.branco, fill: { color: C.escuro }, fontSize: 10, fontFace: FONT, valign: 'middle' };
     for (var k in extra) o[k] = extra[k];
     return { text: t, options: o };
   }
@@ -99,16 +99,16 @@
     return { text: String(t), options: o };
   }
   function tabela(s, rows, x, y, w, colW, rowH) {
-    s.addTable(rows, { x: x, y: y, w: w, colW: colW, rowH: rowH || 0.3, border: { type: 'solid', pt: 0.5, color: C.linha }, margin: [0.03, 0.07, 0.03, 0.07], fontFace: FONT });
+    s.addTable(rows, { x: x, y: y, w: w, colW: colW, rowH: rowH || 0.3, border: { type: 'none' }, margin: [0.03, 0.07, 0.03, 0.07], fontFace: FONT });
   }
 
   function opcChart(extra) {
     var o = {
       catAxisLabelFontFace: FONT, valAxisLabelFontFace: FONT, dataLabelFontFace: FONT,
-      catAxisLabelFontSize: 10, valAxisLabelFontSize: 10, catAxisLabelColor: C.escuro, valAxisLabelColor: C.escuro,
+      catAxisLabelFontSize: 9, valAxisLabelFontSize: 9, catAxisLabelColor: C.escuro, valAxisLabelColor: C.escuro,
       valGridLine: { color: 'E8EAEC', size: 0.5 }, catGridLine: { style: 'none' },
-      showLegend: false, legendFontFace: FONT, legendFontSize: 10, legendColor: C.escuro,
-      showValue: true, dataLabelFontBold: true, dataLabelFontSize: 10, dataLabelColor: C.escuro, dataLabelPosition: 'outEnd',
+      showLegend: false, legendFontFace: FONT, legendFontSize: 9, legendColor: C.escuro,
+      showValue: true, dataLabelFontBold: true, dataLabelFontSize: 9, dataLabelColor: C.escuro, dataLabelPosition: 'outEnd',
       barGapWidthPct: 50
     };
     for (var k in extra) o[k] = extra[k];
@@ -155,7 +155,7 @@
           partes.push({ text: (c * metade + j + 1) + '.  ', options: { bold: true, color: C.verm, breakLine: false } });
           partes.push({ text: t, options: { breakLine: true } });
         });
-        texto(s, partes, X0 + c * 6.3, 2.2, 5.9, 3.8, { fontSize: 16, paraSpaceAfter: 14 });
+        texto(s, partes, X0 + c * 6.3, 2.2, 5.9, 3.8, { fontSize: 14, paraSpaceAfter: 18 });
       });
 
       // 3. Aderência
@@ -214,7 +214,7 @@
       au.procedimentos.forEach(function (p, j) {
         rows.push([cel(p.nome, j), cel(p.conforme, j, { align: 'center' }), cel(p.naoConforme, j, { align: 'center', bold: p.naoConforme > 0, color: p.naoConforme > 0 ? C.verm : C.escuro }), cel(vazio(p.desvio), j)]);
       });
-      tabela(s, rows, X0, 3.1, W, [4.9, 1.1, 1.3, 5.03], 0.3);
+      tabela(s, rows, X0, 3.1, W, [4.9, 1.1, 1.3, 5.03], 0.33);
 
       // 6. Desvios
       var dv = d.desvios;
@@ -256,26 +256,26 @@
       ok.kpis.forEach(function (k, j) { rk.push([cel(k.nome, j), cel(k.valor, j, { align: 'center' })]); });
       rk.push([cel('Último mês (' + ultimo.mes + ')', ok.kpis.length, { bold: true }), cel(ultimo.valor, ok.kpis.length, { bold: true, align: 'center', color: C.verm })]);
       rk.push([cel('Meta', ok.kpis.length + 1, {}), cel(ok.meta, ok.kpis.length + 1, { align: 'center' })]);
-      tabela(s, rk, 9.1, 2.3, 3.73, [2.4, 1.33], 0.4);
+      tabela(s, rk, 9.1, 2.3, 3.73, [2.4, 1.33], 0.55);
 
       // 9 e 10. Flyrock / Misfire
       [d.flyrock, d.misfire].forEach(function (b, n) {
         var s2 = lamina(pptx, ctx, { titulo: b.titulo, sub: String(b.ano), secao: 'Ocorrências por mês em ' + b.ano + ':' });
-        addBar(s2, MESES, [{ name: 'Ocorrências', values: b.mensal }], { x: X0, y: 1.95, w: 7.6, h: 2.85, chartColors: [C.escuro], dataLabelFormatCode: '0', valAxisMinVal: 0, valAxisMajorUnit: 1, valAxisLabelFormatCode: '0' });
+        addBar(s2, MESES, [{ name: 'Ocorrências', values: b.mensal }], { x: X0, y: 1.95, w: 7.6, h: 3.4, chartColors: [C.escuro], dataLabelFormatCode: '0', valAxisMinVal: 0, valAxisMajorUnit: 1, valAxisLabelFormatCode: '0' });
         b.classes.forEach(function (c, j) {
-          var cx = 8.4 + (j % 2) * 2.25, cy = 2.0 + Math.floor(j / 2) * 1.2;
-          s2.addShape('rect', { x: cx, y: cy, w: 2.15, h: 1.1, fill: { color: COR_NOME[c.cor] || C.medio }, line: { color: COR_NOME[c.cor] || C.medio, width: 1 } });
+          var cx = 8.4 + (j % 2) * 2.25, cy = 2.0 + Math.floor(j / 2) * 1.5;
+          s2.addShape('rect', { x: cx, y: cy, w: 2.15, h: 1.4, fill: { color: COR_NOME[c.cor] || C.medio } });
           texto(s2, String(c.valor), cx + 0.05, cy + 0.03, 2.05, 0.4, { fontSize: 20, bold: true, color: C.branco, align: 'center', valign: 'middle' });
-          texto(s2, c.nome, cx + 0.07, cy + 0.43, 2.01, 0.65, { fontSize: 7, color: C.branco, align: 'center', valign: 'top', fit: 'shrink' });
+          texto(s2, c.nome, cx + 0.07, cy + 0.5, 2.01, 0.85, { fontSize: 8, color: C.branco, align: 'center', valign: 'top', fit: 'shrink' });
         });
         s2.addText([{ text: 'Desvios relacionados: ', options: { color: C.medio, fontSize: 12 } }, { text: String(b.desviosRelacionados), options: { bold: true, color: C.verm, fontSize: 20 } }],
-          { x: 8.4, y: 4.4, w: 4.4, h: 0.4, fontFace: FONT, align: 'center', valign: 'middle', margin: 0 });
+          { x: 8.4, y: 5.0, w: 4.4, h: 0.4, fontFace: FONT, align: 'center', valign: 'middle', margin: 0 });
         var ev = b.eventos.length ? b.eventos : ['—'];
-        texto(s2, 'Eventos', X0, 4.9, W, 0.25, { fontSize: 11, bold: true });
+        texto(s2, 'Eventos', X0, 5.55, W, 0.25, { fontSize: 11, bold: true });
         var itens = n === 0
           ? ev.map(function (t, j) { return { text: t, options: { breakLine: j < ev.length - 1 } }; })
           : ev.map(function (t, j) { return { text: t, options: { bullet: true, breakLine: j < ev.length - 1 } }; });
-        texto(s2, itens, X0, 5.17, W, 1.7, { fontSize: 11 });
+        texto(s2, itens, X0, 5.85, W, 1.0, { fontSize: 10 });
       });
 
       // 11. Cruz Verde
@@ -309,7 +309,7 @@
       var bp = d.boasPraticas;
       s = lamina(pptx, ctx, { titulo: bp.titulo, sub: bp.unidade + ' - ' + bp.referencia, secao: 'Indicadores de ' + bp.unidade + ':' });
       bp.indicadores.forEach(function (k, j) {
-        kpi(s, X0 + (j % 2) * 6.25, 2.2 + Math.floor(j / 2) * 2.0, 5.83, 1.8, k.valor, k.nome, C.verm, 48);
+        kpi(s, X0 + (j % 2) * 6.25, 2.1 + Math.floor(j / 2) * 2.35, 5.83, 2.1, k.valor, k.nome, C.verm, 48);
       });
 
       // 13. Kaizen
@@ -336,7 +336,7 @@
         var m = stTxt[t] || [vazio(t), C.medio];
         return cel(m[0], 0, { align: 'center', bold: true, color: m[1] });
       })));
-      tabela(s, ri, X0, 2.2, W, [2.1].concat(ic.colunas.map(function () { return cw; })), [0.4, 1.1, 1.1, 0.5]);
+      tabela(s, ri, X0, 2.2, W, [2.1].concat(ic.colunas.map(function () { return cw; })), [0.5, 1.5, 1.5, 0.7]);
 
       // 15. Cronograma
       var cr = d.cronograma;
@@ -347,7 +347,7 @@
         var m = stC[it.status] || [vazio(it.status), C.medio];
         rc.push([cel(it.mes, j), cel(vazio(it.apresentador), j), cel(vazio(it.unidade), j), cel(m[0], j, { align: 'center', bold: true, color: m[1] })]);
       });
-      tabela(s, rc, X0, 2.05, W, [2.8, 3.6, 3.6, 2.33], 0.35);
+      tabela(s, rc, X0, 2.05, W, [2.8, 3.6, 3.6, 2.33], 0.38);
 
       return pptx;
     });
