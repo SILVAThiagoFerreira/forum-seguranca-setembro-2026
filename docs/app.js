@@ -11,7 +11,7 @@
     cinza: '#8b9096',
     cinzaClaro: '#c4c8cc',
     azul: '#8b9096',
-    grade: '#eceef1'
+    grade: 'transparent'
   };
   const COR_CLASSE = { vermelho: COR.vermelho, laranja: COR.alerta, verde: COR.ok, azul: COR.azul };
   const TEXTO_DIA = { ok: 'sem ocorrência', ocorrencia: 'ocorrência', dano_pessoal: 'dano pessoal' };

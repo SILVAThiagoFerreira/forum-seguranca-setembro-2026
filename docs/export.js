@@ -4,7 +4,7 @@
   var C = {
     verm: 'B5121B', rosa: 'E2B4B8', escuro: '3D4248', medio: '8B9096', claro: 'C4C8CC',
     verde: '3D4248', laranja: 'E30613', amarelo: 'E2B4B8', azul: '8B9096',
-    linha: 'DADDE1', zebra: 'F2F3F5', branco: 'FFFFFF'
+    linha: 'E5E5E5', zebra: 'FFFFFF', branco: 'FFFFFF', cinzaTexto: '4A4A4A'
   };
   var FONT = 'Arial';
   var X0 = 0.5, X1 = 12.83, W = 12.33;
@@ -58,22 +58,22 @@
   }
 
   function rodape(s) {
-    s.addShape('line', { x: X0, y: 6.95, w: W, h: 0, line: { color: C.claro, width: 1 } });
-    texto(s, 'STRICTLY PRIVATE AND CONFIDENTIAL', X0, 7.02, W, 0.25, { fontSize: 9, color: C.medio, align: 'right' });
+    s.addShape('line', { x: X0, y: 6.95, w: W, h: 0, line: { color: C.escuro, width: 0.75 } });
+    texto(s, 'STRICTLY PRIVATE AND CONFIDENTIAL', X0, 7.02, W, 0.25, { fontSize: 8, color: C.medio, align: 'right' });
   }
 
   // Estrutura comum da lâmina
   function lamina(pptx, ctx, o) {
     var s = pptx.addSlide();
     s.background = { color: C.branco };
-    texto(s, String(o.titulo), X0, 0.4, 9.5, 0.4, { fontSize: 20, bold: true, color: '23292F', valign: 'top', fit: 'shrink' });
-    if (o.sub) texto(s, o.sub, X0, 0.8, 9.5, 0.3, { fontSize: 11, color: '6B7280' });
+    texto(s, String(o.titulo).toUpperCase(), X0, 0.45, 9.5, 0.6, { fontSize: 28, bold: false, color: C.verm, valign: 'top', fit: 'shrink' });
+    if (o.sub) texto(s, o.sub, X0, 1.05, 9.5, 0.35, { fontSize: 14, color: C.cinzaTexto });
     logosTopo(s, ctx.logos, ctx);
     var cab = o.cabecalhos || (o.secao ? [{ t: o.secao, x: X0, w: W }] : []);
     cab.forEach(function (c) {
-      texto(s, c.t, c.x, 1.45, c.w, 0.35, { fontSize: c.fs ? Math.min(c.fs, 13) : 14, valign: 'bottom' });
+      texto(s, c.t, c.x, 1.6, c.w, 0.35, { fontSize: c.fs ? Math.min(c.fs, 16) : 16, color: C.cinzaTexto, valign: 'bottom' });
     });
-    if (cab.length) s.addShape('line', { x: X0, y: 1.85, w: W, h: 0, line: { color: C.linha, width: 1 } });
+    if (cab.length) s.addShape('line', { x: X0, y: 2.0, w: W, h: 0, line: { color: C.linha, width: 0.75 } });
     if (o.nota) {
       var partes = [{ text: 'Atenção,', options: { bold: true } }, { text: ' ' + o.nota }];
       texto(s, partes, X0, 6.2, W, 0.6, { fontSize: 11 });
@@ -83,13 +83,12 @@
   }
 
   function kpi(s, x, y, w, h, valor, rotulo, cor, fsV) {
-    s.addShape('rect', { x: x, y: y, w: w, h: h, fill: { color: C.zebra } });
     texto(s, String(valor), x + 0.05, y + 0.08, w - 0.1, h * 0.55, { fontSize: Math.round((fsV || 28) * 0.8), bold: true, color: cor || C.verm, align: 'center', valign: 'middle' });
     texto(s, rotulo, x + 0.08, y + h * 0.6, w - 0.16, h * 0.36, { fontSize: 10, color: C.medio, align: 'center', valign: 'top' });
   }
 
   function cab(t, extra) {
-    var o = { bold: true, color: C.branco, fill: { color: C.escuro }, fontSize: 10, fontFace: FONT, valign: 'middle' };
+    var o = { bold: false, color: C.medio, fill: { color: C.branco }, fontSize: 10, fontFace: FONT, valign: 'middle' };
     for (var k in extra) o[k] = extra[k];
     return { text: t, options: o };
   }
@@ -106,7 +105,7 @@
     var o = {
       catAxisLabelFontFace: FONT, valAxisLabelFontFace: FONT, dataLabelFontFace: FONT,
       catAxisLabelFontSize: 9, valAxisLabelFontSize: 9, catAxisLabelColor: C.escuro, valAxisLabelColor: C.escuro,
-      valGridLine: { color: 'E8EAEC', size: 0.5 }, catGridLine: { style: 'none' },
+      valGridLine: { style: 'none' }, catGridLine: { style: 'none' },
       showLegend: false, legendFontFace: FONT, legendFontSize: 9, legendColor: C.escuro,
       showValue: true, dataLabelFontBold: true, dataLabelFontSize: 9, dataLabelColor: C.escuro, dataLabelPosition: 'outEnd',
       barGapWidthPct: 50
@@ -133,18 +132,18 @@
       var ref = d.meta.referencia;
 
       // 1. Capa
-      // Capa no padrão "Fluxo Operacional": fundo vermelho escuro, diagonal translúcida, logo branca, título à direita
+      // Capa no padrão de relatório corporativo: fundo branco, título vermelho em caixa alta, logo colorida
       s = pptx.addSlide();
-      s.background = { color: '7A1013' };
-      s.addShape('rtTriangle', { x: 0, y: 0, w: 13.333, h: 7.5, flipH: true, flipV: false, rotate: 0, fill: { color: 'B5121B', transparency: 78 }, line: { color: 'B5121B', transparency: 100, width: 0 } });
-      var lb = logos.enaexBranco || logos.enaex;
+      s.background = { color: C.branco };
+      var lb = logos.enaex;
       var ab = tamanhoPng(lb);
-      s.addImage({ data: lb, x: 0.55, y: 0.4, w: 0.6 * ab.w / ab.h, h: 0.6 });
-      texto(s, String(d.meta.evento || '34º Fórum de Segurança').toUpperCase(), 3.3, 4.95, 9.5, 0.8, { fontSize: 38, color: C.branco, align: 'right', valign: 'middle' });
-      texto(s, d.meta.gerencia, 3.3, 5.8, 9.5, 0.4, { fontSize: 18, color: C.branco, align: 'right' });
-      texto(s, d.meta.periodo, 3.3, 6.25, 9.5, 0.35, { fontSize: 14, bold: true, color: 'C9A227', align: 'right' });
-      texto(s, 'STRICTLY PRIVATE AND CONFIDENTIAL', X0, 7.02, W, 0.25, { fontSize: 9, color: C.branco, align: 'right' });
-      texto(s, d.meta.aviso, X0, 7.02, 8, 0.25, { fontSize: 9, color: 'E5C9CB' });
+      s.addImage({ data: lb, x: X1 - 0.6 * ab.w / ab.h, y: 0.45, w: 0.6 * ab.w / ab.h, h: 0.6 });
+      texto(s, String(d.meta.evento || '34º Fórum de Segurança').toUpperCase(), X0, 3.6, 10.5, 1.0, { fontSize: 36, color: C.verm, valign: 'middle' });
+      texto(s, d.meta.gerencia, X0, 4.7, 10.5, 0.4, { fontSize: 18, color: C.cinzaTexto });
+      texto(s, d.meta.periodo, X0, 5.15, 10.5, 0.35, { fontSize: 14, color: C.cinzaTexto });
+      s.addShape('line', { x: X0, y: 6.95, w: W, h: 0, line: { color: C.escuro, width: 0.75 } });
+      texto(s, 'STRICTLY PRIVATE AND CONFIDENTIAL', X0, 7.02, W, 0.25, { fontSize: 8, color: C.medio, align: 'right' });
+      texto(s, d.meta.aviso, X0, 7.02, 8, 0.25, { fontSize: 8, color: C.medio });
 
       // 2. Pauta
       s = lamina(pptx, ctx, { titulo: 'Pauta', sub: d.meta.evento + ' - ' + d.meta.periodo, secao: 'Itens da reunião:' });
