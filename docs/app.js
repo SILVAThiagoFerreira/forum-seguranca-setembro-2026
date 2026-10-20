@@ -13,8 +13,6 @@
     azul: '#8b9096',
     grade: 'transparent'
   };
-  const COR_CLASSE = { vermelho: COR.vermelho, laranja: COR.alerta, verde: COR.ok, azul: COR.azul };
-  const TEXTO_DIA = { ok: 'sem ocorrência', ocorrencia: 'ocorrência', dano_pessoal: 'dano pessoal' };
 
   // ---------- utilidades ----------
   const fmt = (n, d = 0) => Number(n).toLocaleString('pt-BR', { minimumFractionDigits: d, maximumFractionDigits: d });
@@ -184,145 +182,6 @@
     };
   }
 
-  function chartGutClasses(d) {
-    const classes = d.desvios.gut.classes;
-    return {
-      type: 'bar',
-      data: {
-        labels: classes.map((c) => c.nome),
-        datasets: [{
-          data: classes.map((c) => c.valor),
-          backgroundColor: [COR.ok, COR.amarelo, COR.vermelho],
-          borderRadius: 3,
-          maxBarThickness: 90,
-          datalabels: { display: true, anchor: 'end', align: 'end', offset: 2, color: COR.ardosia, font: { weight: '700', size: 13 }, formatter: (v) => fmt(v) }
-        }]
-      },
-      options: configBase({
-        plugins: { legend: { display: false } },
-        scales: {
-          y: { beginAtZero: true, grid: { color: COR.grade } },
-          x: { grid: { display: false } }
-        }
-      })
-    };
-  }
-
-  function chartGutNotas(d) {
-    const notas = d.desvios.gut.notas;
-    return {
-      type: 'bar',
-      data: {
-        labels: notas.map((n) => String(n.nota)),
-        datasets: [{
-          label: 'Desvios',
-          data: notas.map((n) => n.valor),
-          backgroundColor: notas.map((n) => (n.nota >= 10 ? COR.vermelho : COR.ardosia)),
-          borderRadius: 2,
-          datalabels: { display: true, anchor: 'end', align: 'end', offset: 1, color: COR.ardosia, font: { size: 10, weight: '700' }, formatter: (v) => (v > 0 ? v : '') }
-        }]
-      },
-      options: configBase({
-        plugins: { legend: { display: false } },
-        scales: {
-          y: { beginAtZero: true, grid: { color: COR.grade } },
-          x: { grid: { display: false }, title: { display: true, text: 'Nota GUT', color: COR.ardosia } }
-        }
-      })
-    };
-  }
-
-  function chartOkr(d) {
-    const meses = d.okr.meses;
-    const meta = d.okr.meta;
-    return {
-      type: 'bar',
-      data: {
-        labels: meses.map((m) => m.mes),
-        datasets: [
-          {
-            label: 'Conclusão (%)',
-            data: meses.map((m) => m.valor),
-            order: 2,
-            backgroundColor: COR.vermelho,
-            borderRadius: 3,
-            maxBarThickness: 60,
-            datalabels: { display: true, anchor: 'end', align: 'end', offset: 2, color: COR.ardosia, font: { weight: '700', size: 12 }, formatter: (v) => v + '%' }
-          },
-          {
-            type: 'line',
-            label: 'Meta ' + meta + '%',
-            data: meses.map(() => meta),
-            order: 1,
-            borderColor: COR.ok,
-            borderDash: [6, 4],
-            borderWidth: 1.5,
-            pointRadius: 0,
-            datalabels: { display: false }
-          }
-        ]
-      },
-      options: configBase({
-        plugins: { legend: { position: 'bottom' } },
-        scales: {
-          y: { min: 0, max: 100, ticks: { stepSize: 20, callback: (v) => v + '%' }, grid: { color: COR.grade } },
-          x: { grid: { display: false } }
-        }
-      })
-    };
-  }
-
-  function chartMensal(valores, meses, descricao) {
-    const maximo = Math.max(...valores);
-    return {
-      type: 'bar',
-      data: {
-        labels: meses,
-        datasets: [{
-          label: descricao,
-          data: valores,
-          backgroundColor: COR.ardosia,
-          borderRadius: 3,
-          maxBarThickness: 44,
-          datalabels: { display: true, anchor: 'end', align: 'end', offset: 1, color: COR.ardosia, font: { weight: '700', size: 12 }, formatter: (v) => (v > 0 ? v : '') }
-        }]
-      },
-      options: configBase({
-        plugins: { legend: { display: false } },
-        scales: {
-          y: { beginAtZero: true, suggestedMax: maximo + 1, ticks: { stepSize: 1 }, grid: { color: COR.grade } },
-          x: { grid: { display: false } }
-        }
-      })
-    };
-  }
-
-  function chartKaizen(d) {
-    const u = d.kaizen.unidades;
-    const maximo = Math.max(...u.map((x) => x.valor));
-    return {
-      type: 'bar',
-      data: {
-        labels: u.map((x) => x.nome),
-        datasets: [{
-          label: 'Kaizens acumulados',
-          data: u.map((x) => x.valor),
-          backgroundColor: COR.ardosia,
-          borderRadius: 3,
-          maxBarThickness: 60,
-          datalabels: { display: true, anchor: 'end', align: 'end', offset: 2, color: COR.ardosia, font: { weight: '700', size: 12 }, formatter: (v) => fmt(v) }
-        }]
-      },
-      options: configBase({
-        plugins: { legend: { display: false } },
-        scales: {
-          y: { beginAtZero: true, suggestedMax: Math.ceil((maximo + 5) / 10) * 10, ticks: { stepSize: 10 }, grid: { color: COR.grade } },
-          x: { grid: { display: false }, ticks: { autoSkip: false, maxRotation: 30, font: { size: 11 } } }
-        }
-      })
-    };
-  }
-
   // ---------- seções ----------
   function renderHero(d) {
     const ader = d.aderencia.unidades;
@@ -330,19 +189,22 @@
     const naMeta = ader.filter((u) => u.valor >= d.aderencia.meta).length;
     const realizado = soma(d.vct.quantidades.unidades.map((u) => u.tecnicos + u.supervisores));
     const planejado = soma(d.vct.quantidades.unidades.map((u) => u.planejado));
-    const variacaoVct = ((realizado - planejado) / planejado) * 100;
-    const desvios = soma(d.desvios.porGerencia.map((x) => x.valor));
-    const okrAtual = d.okr.meses[d.okr.meses.length - 1];
-    const misfire = soma(d.misfire.mensal);
-    const kaizenAtual = soma(d.kaizen.unidades.map((u) => u.valor));
-    const evoKaizen = ((kaizenAtual - d.kaizen.anterior) / d.kaizen.anterior) * 100;
+    const variacaoVct = planejado ? ((realizado - planejado) / planejado) * 100 : 0;
+    const dv = d.desvios;
+    const totalDesvios = soma(dv.porGerencia.map((x) => x.valor));
+    const resolvidos = dv.porSituacao[0].valor;
+    const pendentes = dv.porSituacao[1].valor;
+    const ins = d.inspecoes;
+    const metaIns = soma(ins.unidades.map((u) => u.meta));
+    const execIns = soma(ins.unidades.map((u) => u.executado));
+    const resIns = metaIns ? (execIns / metaIns) * 100 : 0;
     return h('section', { class: 'kpis', 'aria-label': 'Indicadores principais' },
       kpi({ rotulo: 'Aderência média', valor: pct(mediaAder), sub: naMeta + ' de ' + ader.length + ' unidades na meta de ' + d.aderencia.meta + '%', cor: naMeta === ader.length ? 'verde' : 'vermelho' }),
       kpi({ rotulo: 'VCT realizadas', valor: realizado + '/' + planejado, sub: 'variação ' + sinal(variacaoVct) + '% vs. planejado', cor: variacaoVct < 0 ? 'vermelho' : 'verde' }),
-      kpi({ rotulo: 'Desvios no mês', valor: fmt(desvios), sub: d.desvios.referencia, cor: 'amarelo' }),
-      kpi({ rotulo: 'Conclusão dos planos', valor: pct(okrAtual.valor, 0), sub: okrAtual.mes + ', meta ' + d.okr.meta + '%', cor: okrAtual.valor >= d.okr.meta ? 'verde' : 'vermelho' }),
-      kpi({ rotulo: 'Misfire no ano', valor: fmt(misfire), sub: d.misfire.desviosRelacionados + ' desvios relacionados', cor: 'azul' }),
-      kpi({ rotulo: 'Kaizens acumulados', valor: fmt(kaizenAtual), sub: sinal(evoKaizen, 2) + '% vs. total anterior (' + d.kaizen.anterior + ')', cor: 'verde' }));
+      kpi({ rotulo: 'Desvios no mês', valor: fmt(dv.mes), sub: dv.mesReferencia, cor: 'amarelo' }),
+      kpi({ rotulo: 'Desvios pendentes', valor: fmt(pendentes), sub: 'de ' + fmt(totalDesvios) + ' registrados no período', cor: pendentes ? 'vermelho' : 'verde' }),
+      kpi({ rotulo: 'Desvios resolvidos', valor: fmt(resolvidos), sub: pct(totalDesvios ? (resolvidos / totalDesvios) * 100 : 0, 0) + ' dos registrados', cor: 'verde' }),
+      kpi({ rotulo: 'Inspeções no mês', valor: fmt(execIns) + '/' + fmt(metaIns), sub: pct(resIns, 0) + ' da meta · ' + ins.referencia, cor: resIns >= 100 ? 'verde' : 'vermelho' }));
   }
 
   function renderPauta(d) {
@@ -364,7 +226,7 @@
       id: 'aderencia',
       kicker: '01 · Treinamentos obrigatórios',
       titulo: a.titulo,
-      sub: a.subtitulo,
+      sub: a.subtitulo + ' Referência: ' + a.referencia + '.',
       corpo: h('div', {},
         h('div', { class: 'grade-kpi' },
           kpi({ rotulo: 'Meta', valor: pct(a.meta, 0), cor: '' }),
@@ -374,8 +236,7 @@
         h('p', { class: 'legenda-manual' },
           h('i', { style: 'background:' + COR.ok }), 'atingiu a meta',
           h('i', { style: 'background:' + COR.vermelho }), 'abaixo da meta',
-          h('i', { style: 'background:' + COR.ardosia }), 'linha tracejada = meta de ' + a.meta + '%'),
-        h('p', { class: 'nota' }, h('b', {}, 'Atenção, '), 'valores fictícios de demonstração.'))
+          h('i', { style: 'background:' + COR.ardosia }), 'linha tracejada = meta de ' + a.meta + '%'))
     });
   }
 
@@ -385,7 +246,7 @@
     const sup = soma(q.unidades.map((u) => u.supervisores));
     const real = tec + sup;
     const plan = soma(q.unidades.map((u) => u.planejado));
-    const variacao = ((real - plan) / plan) * 100;
+    const variacao = plan ? ((real - plan) / plan) * 100 : 0;
     const abaixo = q.unidades.filter((u) => u.tecnicos + u.supervisores < u.planejado).length;
     const area1 = area('', 'Gráfico de colunas agrupadas: VCT realizadas e planejadas por unidade');
     grafico(area1.canvas, chartVctQuantidades(d));
@@ -408,22 +269,15 @@
 
   function renderVctAuditorias(d) {
     const a = d.vct.auditorias;
-    const conf = soma(a.procedimentos.map((p) => p.conforme));
-    const nconf = soma(a.procedimentos.map((p) => p.naoConforme));
-    const total = conf + nconf;
-    const indice = (conf / total) * 100;
-    const linhas = a.procedimentos.map((p) => [
-      { conteudo: p.nome },
-      { conteudo: fmt(p.conforme), classe: 'num' },
-      { conteudo: fmt(p.naoConforme), classe: 'num' },
-      { conteudo: p.desvio || '—' }
+    const com = a.unidades.filter((u) => u.resultado !== null);
+    const resultadoMedio = com.length ? media(com.map((u) => u.resultado)) : 0;
+    const naoConformes = soma(a.unidades.map((u) => u.naoConformes));
+    const cem = com.filter((u) => u.resultado >= 100).length;
+    const linhas = a.unidades.map((u) => [
+      { conteudo: u.nome },
+      { conteudo: u.resultado === null ? '—' : pct(u.resultado, 0), classe: 'num' },
+      { conteudo: fmt(u.naoConformes), classe: 'num' }
     ]);
-    const rodape = [
-      { conteudo: 'Total' },
-      { conteudo: fmt(conf), classe: 'num' },
-      { conteudo: fmt(nconf), classe: 'num' },
-      { conteudo: '' }
-    ];
     return bloco({
       id: 'vct-auditorias',
       kicker: '02 · Verificação do ciclo do trabalho (VCT)',
@@ -431,205 +285,79 @@
       sub: 'Referência: ' + a.referencia,
       corpo: h('div', {},
         h('div', { class: 'grade-kpi' },
-          kpi({ rotulo: 'Conformes', valor: fmt(conf), cor: 'verde' }),
-          kpi({ rotulo: 'Não conformes', valor: fmt(nconf), cor: nconf ? 'vermelho' : 'verde' }),
-          kpi({ rotulo: 'Total de VCTs', valor: fmt(total) }),
-          kpi({ rotulo: 'Índice de conformidade', valor: pct(indice), sub: 'meta ≥ ' + a.meta + '%', cor: indice >= a.meta ? 'verde' : 'vermelho' })),
+          kpi({ rotulo: 'Resultado médio', valor: pct(resultadoMedio, 0), cor: resultadoMedio >= 100 ? 'verde' : 'vermelho' }),
+          kpi({ rotulo: 'Itens não conformes', valor: fmt(naoConformes), cor: naoConformes ? 'vermelho' : 'verde' }),
+          kpi({ rotulo: 'Unidades com 100%', valor: cem + ' de ' + com.length, cor: cem === com.length ? 'verde' : '' })),
         tabela([
-          { texto: 'Procedimento auditado' },
-          { texto: 'Conforme', classe: 'num' },
-          { texto: 'Não conforme', classe: 'num' },
-          { texto: 'Principais desvios' }
-        ], linhas, rodape))
+          { texto: 'Unidade' },
+          { texto: 'Resultado médio', classe: 'num' },
+          { texto: 'Itens não conformes', classe: 'num' }
+        ], linhas))
     });
   }
 
   function renderDesvios(d) {
     const ger = d.desvios.porGerencia;
-    const cat = d.desvios.porCategoria;
+    const sit = d.desvios.porSituacao;
     const total = soma(ger.map((x) => x.valor));
-    const topCat = cat.slice().sort((a, b) => b.valor - a.valor)[0];
+    const resolvidos = sit[0].valor;
+    const pendentes = sit[1].valor;
     const areaGer = area('alto', 'Barras horizontais: desvios por gerência');
-    const areaCat = area('alto', 'Barras horizontais: desvios por categoria');
+    const areaSit = area('baixo', 'Barras horizontais: desvios resolvidos e pendentes');
     grafico(areaGer.canvas, chartBarrasHorizontais(ger, COR.ardosia));
-    grafico(areaCat.canvas, chartBarrasHorizontais(cat, COR.vermelho));
+    grafico(areaSit.canvas, chartBarrasHorizontais(sit, COR.vermelho));
     return bloco({
       id: 'desvios',
       kicker: '03 · Registros de desvios',
-      titulo: 'Nº de desvios por gerência e categoria',
+      titulo: d.desvios.titulo,
       sub: 'Referência: ' + d.desvios.referencia,
       corpo: h('div', {},
         h('div', { class: 'grade-kpi' },
           kpi({ rotulo: 'Total de desvios', valor: fmt(total), cor: 'vermelho' }),
-          kpi({ rotulo: 'Gerências', valor: String(ger.length) }),
-          kpi({ rotulo: 'Categoria principal', valor: topCat.nome, sub: fmt(topCat.valor) + ' desvios' })),
+          kpi({ rotulo: 'Resolvidos', valor: fmt(resolvidos), sub: pct(total ? (resolvidos / total) * 100 : 0, 0), cor: 'verde' }),
+          kpi({ rotulo: 'Pendentes', valor: fmt(pendentes), sub: pct(total ? (pendentes / total) * 100 : 0, 0), cor: pendentes ? 'amarelo' : 'verde' })),
         h('div', { class: 'grade-2' },
           h('div', {}, h('p', { class: 'rotulo-grafico' }, 'Por gerência'), areaGer.caixa),
-          h('div', {}, h('p', { class: 'rotulo-grafico' }, 'Por categoria'), areaCat.caixa)))
-    });
-  }
-
-  function renderGut(d) {
-    const g = d.desvios.gut;
-    const total = soma(g.classes.map((c) => c.valor));
-    const areaCls = area('', 'Colunas: desvios por classe GUT');
-    const areaNotas = area('', 'Colunas: desvios por nota GUT');
-    grafico(areaCls.canvas, chartGutClasses(d));
-    grafico(areaNotas.canvas, chartGutNotas(d));
-    const altoTotal = soma(g.altoPorGerencia.map((x) => x.valor));
-    return bloco({
-      id: 'gut',
-      kicker: '03 · Registros de desvios',
-      titulo: g.titulo,
-      sub: 'Classificação GUT (gravidade × urgência × tendência) dos desvios de ' + d.desvios.referencia.toLowerCase() + '.',
-      corpo: h('div', {},
-        h('div', { class: 'grade-kpi' },
-          kpi({ rotulo: 'Total de GUTs', valor: fmt(total) }),
-          kpi({ rotulo: 'Classe baixa', valor: fmt(g.classes[0].valor), cor: 'verde' }),
-          kpi({ rotulo: 'Classe média', valor: fmt(g.classes[1].valor), cor: 'amarelo' }),
-          kpi({ rotulo: 'Classe alta', valor: fmt(g.classes[2].valor), cor: 'vermelho' })),
-        h('div', { class: 'grade-2' },
-          h('div', {}, h('p', { class: 'rotulo-grafico' }, 'Desvios por classe'), areaCls.caixa),
-          h('div', {}, h('p', { class: 'rotulo-grafico' }, 'Desvios por nota GUT (vermelho = notas 10 a 15)'), areaNotas.caixa)),
-        h('div', { class: 'tabela-wrap', style: 'margin-top:16px' },
-          h('p', { class: 'rotulo-grafico' }, 'GUT alto por gerência'),
-          tabela([{ texto: 'Gerência' }, { texto: 'Desvios', classe: 'num' }],
-            g.altoPorGerencia.map((x) => [{ conteudo: x.nome }, { conteudo: fmt(x.valor), classe: 'num' }]),
-            [{ conteudo: 'Total' }, { conteudo: fmt(altoTotal), classe: 'num' }])))
-    });
-  }
-
-  function renderOkr(d) {
-    const o = d.okr;
-    const area1 = area('', 'Colunas mensais: conclusão dos planos de ação com linha de meta');
-    grafico(area1.canvas, chartOkr(d));
-    const ultimo = o.meses[o.meses.length - 1];
-    return bloco({
-      id: 'okr',
-      kicker: '04 · OKR 2026',
-      titulo: o.titulo,
-      sub: o.indicador,
-      corpo: h('div', { class: 'grade-2' },
-        h('div', {}, area1.caixa),
-        h('div', { class: 'kaizen-kpis' },
-          kpi({ rotulo: 'Último mês (' + ultimo.mes + ')', valor: pct(ultimo.valor, 0), cor: ultimo.valor >= o.meta ? 'verde' : 'vermelho' }),
-          kpi({ rotulo: 'Gate', valor: o.kpis[0].valor + '%' }),
-          kpi({ rotulo: 'Appropriated (meta)', valor: o.kpis[1].valor + '%', cor: 'verde' }),
-          kpi({ rotulo: 'Exceeded', valor: o.kpis[2].valor + '%' })))
-    });
-  }
-
-  function renderTimeline(d, chave, rotuloId, kickerTexto, titulo) {
-    const t = d[chave];
-    const meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-    const total = soma(t.mensal);
-    const area1 = area('baixo', 'Colunas mensais: ocorrências no ano');
-    grafico(area1.canvas, chartMensal(t.mensal, meses, titulo));
-    return bloco({
-      id: rotuloId,
-      kicker: kickerTexto,
-      titulo: titulo,
-      sub: 'Ocorrências por mês em ' + t.ano + ' (total ' + total + ')',
-      corpo: h('div', { class: 'grade-2' },
-        h('div', {}, area1.caixa),
-        h('div', {},
-          h('div', { class: 'classes' },
-            t.classes.map((c) => h('div', { class: 'classe ' + c.cor },
-              h('div', { class: 'classe-valor' }, fmt(c.valor)),
-              h('div', { class: 'classe-nome' }, c.nome)))),
-          h('div', { class: 'grade-kpi', style: 'margin-top:12px' },
-            kpi({ rotulo: 'Desvios relacionados', valor: fmt(t.desviosRelacionados), cor: 'azul' }))),
-        h('ul', { class: 'lista-eventos' }, t.eventos.map((e) => h('li', {}, e))))
-    });
-  }
-
-  function renderCruzVerde(d) {
-    const c = d.cruzVerde;
-    const legenda = [['ok', 'sem ocorrência'], ['ocorrencia', 'ocorrência'], ['dano_pessoal', 'dano pessoal']];
-    const calendario = h('div', { class: 'calendario', role: 'img', 'aria-label': 'Calendário de ocorrências de ' + c.mes },
-      c.dias.map((status, i) => h('div', { class: 'dia ' + status, title: 'Dia ' + (i + 1) + ': ' + TEXTO_DIA[status] }, String(i + 1))));
-    const esquerda = h('div', {},
-      h('div', { class: 'legenda-cruz' }, legenda.map(([classe, texto]) =>
-        h('span', {}, h('i', { class: 'dia ' + classe, style: 'display:inline-block;width:12px;height:12px;margin-right:6px;vertical-align:-2px' }), texto))),
-      calendario);
-    const danosP = tabela([{ texto: 'Data' }, { texto: 'Descrição' }], c.danosPessoais.map((x) => [{ conteudo: x.data }, { conteudo: x.descricao }]));
-    const danosM = tabela([{ texto: 'Data' }, { texto: 'Descrição' }], c.danosMateriais.map((x) => [{ conteudo: x.data }, { conteudo: x.descricao }]));
-    return bloco({
-      id: 'cruz-verde',
-      kicker: '05 · Segurança operacional',
-      titulo: 'Cruz Verde · ' + c.mes,
-      sub: 'Um quadrado por dia do mês, com a classificação das ocorrências.',
-      corpo: h('div', { class: 'grade-2' },
-        esquerda,
-        h('div', {},
-          h('p', { class: 'rotulo-grafico' }, 'Danos pessoais'), danosP,
-          h('p', { class: 'rotulo-grafico', style: 'margin-top:16px' }, 'Danos materiais'), danosM))
-    });
-  }
-
-  function renderBoasPraticas(d) {
-    const b = d.boasPraticas;
-    return bloco({
-      id: 'boas-praticas',
-      kicker: '06 · Boas práticas',
-      titulo: b.titulo,
-      sub: b.unidade + ' · ' + b.referencia,
-      corpo: h('div', { class: 'grade-kpi' },
-        b.indicadores.map((x, i) => kpi({ rotulo: x.nome, valor: fmt(x.valor, 0), cor: ['vermelho', 'verde', 'amarelo', 'azul'][i % 4] })))
-    });
-  }
-
-  function renderKaizen(d) {
-    const k = d.kaizen;
-    const atual = soma(k.unidades.map((u) => u.valor));
-    const evo = ((atual - k.anterior) / k.anterior) * 100;
-    const area1 = area('', 'Colunas: Kaizens acumulados por unidade');
-    grafico(area1.canvas, chartKaizen(d));
-    return bloco({
-      id: 'kaizen',
-      kicker: '07 · Kaizen',
-      titulo: k.titulo,
-      sub: k.periodo,
-      corpo: h('div', { class: 'grade-2' },
-        h('div', {}, area1.caixa),
-        h('div', { class: 'kaizen-kpis' },
-          kpi({ rotulo: 'Total anterior', valor: fmt(k.anterior) }),
-          kpi({ rotulo: 'Total atual', valor: fmt(atual), cor: 'verde' }),
-          kpi({ rotulo: 'Evolução', valor: sinal(evo, 2) + '%', cor: evo >= 0 ? 'verde' : 'vermelho' })))
+          h('div', {}, h('p', { class: 'rotulo-grafico' }, 'Por situação'), areaSit.caixa)))
     });
   }
 
   function renderInspecoes(d) {
-    const t = d.inspecoesCruzadas;
-    const statusPill = (s) => (s === 'S' ? pill('Realizado', 'ok') : s === 'N' ? pill('Não realizado', 'nok') : pill('Programado', 'prog'));
-    const cabec = [{ texto: 'Período' }].concat(t.colunas.map((c) => ({ texto: c, classe: 'centro' })));
-    const linhas = [
-      [{ conteudo: 'Responsável pela inspeção' }].concat(t.responsavel.map((v) => ({ conteudo: v, classe: 'centro' }))),
-      [{ conteudo: 'Unidade a ser inspecionada' }].concat(t.inspecionada.map((v) => ({ conteudo: v, classe: 'centro' }))),
-      [{ conteudo: 'Status' }].concat(t.status.map((s) => ({ conteudo: statusPill(s), classe: 'centro' })))
+    const t = d.inspecoes;
+    const metaTotal = soma(t.unidades.map((u) => u.meta));
+    const execTotal = soma(t.unidades.map((u) => u.executado));
+    const resultado = metaTotal ? (execTotal / metaTotal) * 100 : 0;
+    const linhas = t.unidades.map((u) => [
+      { conteudo: u.nome },
+      { conteudo: fmt(u.meta), classe: 'num' },
+      { conteudo: fmt(u.executado), classe: 'num' },
+      { conteudo: pct(u.resultado, 0), classe: 'num' },
+      { conteudo: sinal(u.resultado - 100, 0) + '%', classe: 'num' }
+    ]);
+    const rodape = [
+      { conteudo: 'Total' },
+      { conteudo: fmt(metaTotal), classe: 'num' },
+      { conteudo: fmt(execTotal), classe: 'num' },
+      { conteudo: pct(resultado, 0), classe: 'num' },
+      { conteudo: sinal(resultado - 100, 0) + '%', classe: 'num' }
     ];
     return bloco({
       id: 'inspecoes',
-      kicker: '08 · Inspeções cruzadas',
+      kicker: '04 · Inspeções mensais de segurança',
       titulo: t.titulo,
-      corpo: tabela(cabec, linhas)
-    });
-  }
-
-  function renderCronograma(d) {
-    const c = d.cronograma;
-    const statusTxt = (s) => (s === 'realizado' ? pill('Realizado', 'ok') : s === 'sem_forum' ? pill('Sem fórum', 'sem') : pill('Pendente', 'prog'));
-    const linhas = c.itens.map((x) => [
-      { conteudo: x.mes },
-      { conteudo: x.apresentador || '—' },
-      { conteudo: x.unidade || '—' },
-      { conteudo: statusTxt(x.status) }
-    ]);
-    return bloco({
-      id: 'cronograma',
-      kicker: '09 · Fórum 2026',
-      titulo: c.titulo,
-      corpo: tabela([{ texto: 'Mês' }, { texto: 'Apresentador' }, { texto: 'Unidade' }, { texto: 'Status' }], linhas)
+      sub: 'Referência: ' + t.referencia,
+      corpo: h('div', {},
+        h('div', { class: 'grade-kpi' },
+          kpi({ rotulo: 'Meta (QTD)', valor: fmt(metaTotal) }),
+          kpi({ rotulo: 'Executado (QTD)', valor: fmt(execTotal), cor: 'verde' }),
+          kpi({ rotulo: 'Resultado', valor: pct(resultado, 0), cor: resultado >= 100 ? 'verde' : 'vermelho' })),
+        tabela([
+          { texto: 'Unidade de serviço' },
+          { texto: 'Meta (QTD)', classe: 'num' },
+          { texto: 'Executado (QTD)', classe: 'num' },
+          { texto: 'Resultado', classe: 'num' },
+          { texto: 'Variação', classe: 'num' }
+        ], linhas, rodape))
     });
   }
 
@@ -639,15 +367,7 @@
     ['vct-quantidades', 'VCT'],
     ['vct-auditorias', 'Auditorias'],
     ['desvios', 'Desvios'],
-    ['gut', 'GUT'],
-    ['okr', 'OKR'],
-    ['flyrock', 'Flyrock'],
-    ['misfire', 'Misfire'],
-    ['cruz-verde', 'Cruz Verde'],
-    ['boas-praticas', 'Boas práticas'],
-    ['kaizen', 'Kaizen'],
-    ['inspecoes', 'Inspeções'],
-    ['cronograma', 'Cronograma']
+    ['inspecoes', 'Inspeções']
   ];
 
   function renderNav() {
@@ -658,6 +378,8 @@
   function renderPagina(d) {
     pendentes = [];
     document.title = d.meta.evento + ' · ' + d.meta.periodo;
+    const topoSub = document.querySelector('.topo-sub');
+    if (topoSub) topoSub.textContent = '· ' + d.meta.periodo;
     document.getElementById('aviso-dados').textContent = d.meta.aviso;
     const conteudo = [
       h('div', { class: 'cabecalho-pagina' },
@@ -670,15 +392,7 @@
       renderVctQuantidades(d),
       renderVctAuditorias(d),
       renderDesvios(d),
-      renderGut(d),
-      renderOkr(d),
-      renderTimeline(d, 'flyrock', 'flyrock', '05 · GT Flyrock', 'Linha do tempo Flyrock'),
-      renderTimeline(d, 'misfire', 'misfire', '05 · GT Misfire', 'Linha do tempo Misfire'),
-      renderCruzVerde(d),
-      renderBoasPraticas(d),
-      renderKaizen(d),
-      renderInspecoes(d),
-      renderCronograma(d)
+      renderInspecoes(d)
     ];
     document.getElementById('conteudo').replaceChildren(...conteudo);
     renderNav();
@@ -736,53 +450,163 @@
     });
   }
 
-  // ---------- planilha Google (aba com colunas caminho,valor) ----------
-  const SHEET_ID = '1nsusLCjD46bmaYTDaXw_P32eqveTOpsz5Ago3z03V2s';
+  // ---------- planilha (Google Drive, arquivo .xlsx) ----------
+  // Arquivo: "KPI's Segurança do Trabalho (Gerencia de Mineraçao Nordeste e Undergroud).xlsx"
+  // O link de exportação do Drive responde com CORS liberado para o GitHub Pages.
+  const SHEET_ID = '14LdgBH2N-EUjuCBsdlh_NzeWPv6o85jU';
+  const URL_PLANILHA = 'https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/export?format=xlsx';
 
-  function parseCsv(texto) {
-    const linhas = [];
-    let campo = '', linha = [], aspas = false;
-    for (let i = 0; i < texto.length; i++) {
-      const c = texto[i];
-      if (aspas) {
-        if (c === '"' && texto[i + 1] === '"') { campo += '"'; i++; }
-        else if (c === '"') aspas = false;
-        else campo += c;
-      } else if (c === '"') aspas = true;
-      else if (c === ',') { linha.push(campo); campo = ''; }
-      else if (c === '\n' || c === '\r') {
-        if (c === '\r' && texto[i + 1] === '\n') i++;
-        linha.push(campo); campo = '';
-        linhas.push(linha); linha = [];
-      } else campo += c;
-    }
-    if (campo || linha.length) { linha.push(campo); linhas.push(linha); }
-    return linhas;
+  const EVENTO = '34º Fórum de Segurança';
+  const GERENCIA = 'Gerência de Mineração Nordeste/Underground';
+  const MESES = ['janeiro', 'fevereiro', 'marco', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+  const MESES_NOME = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+
+  const norm = (s) => String(s == null ? '' : s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
+  const nomeLimpo = (s) => String(s == null ? '' : s).replace(/\s+/g, ' ').trim();
+  const mesIdx = (v) => MESES.findIndex((m) => norm(v).startsWith(m));
+  const arred2 = (x) => Math.round(x * 100) / 100;
+  function numero(v) {
+    if (typeof v === 'number') return isNaN(v) ? null : v;
+    if (v == null || String(v).trim() === '') return null;
+    const n = Number(String(v).trim().replace(',', '.'));
+    return isNaN(n) ? null : n;
   }
 
-  function tipar(v) {
-    return v !== '' && !isNaN(Number(v)) ? Number(v) : v;
+  function abaDe(wb, chave) {
+    const nome = wb.SheetNames.find((n) => norm(n).includes(chave));
+    if (!nome) throw new Error('aba "' + chave + '" não encontrada na planilha');
+    return XLSX.utils.sheet_to_json(wb.Sheets[nome], { header: 1, defval: null, raw: true });
+  }
+
+  function montarDados(wb) {
+    // Pauta: uma linha com Ano, Mês, Dia do Fórum e os itens a partir da coluna D
+    const pa = abaDe(wb, 'pauta');
+    const linhaPa = pa[1] || [];
+    const miPauta = mesIdx(linhaPa[1]);
+    if (miPauta < 0) throw new Error('mês da pauta não reconhecido');
+    const pauta = linhaPa.slice(3).map(nomeLimpo).filter(Boolean);
+    const periodo = MESES_NOME[miPauta] + ' ' + linhaPa[0];
+
+    // Aderência: linhas "Resultado (%)", unidades a partir da coluna E, meta na coluna C (fração)
+    const ad = abaDe(wb, 'aderencia');
+    const colsUnidades = [];
+    for (let i = 4; i < ad[0].length; i++) if (nomeLimpo(ad[0][i])) colsUnidades.push(i);
+    const resultados = ad.slice(1).filter((r) => r && norm(r[3]).startsWith('resultado') && colsUnidades.some((i) => numero(r[i]) !== null));
+    if (!resultados.length) throw new Error('nenhum resultado de aderência preenchido');
+    const ultAd = resultados[resultados.length - 1];
+    const metaAd = numero(ultAd[2]);
+    const aderencia = {
+      titulo: 'Aderência por unidade (%)',
+      subtitulo: 'Treinamentos obrigatórios por unidade.',
+      referencia: MESES_NOME[mesIdx(ultAd[1])] + ' ' + ultAd[0],
+      meta: metaAd <= 1 ? arred2(metaAd * 100) : metaAd,
+      unidades: colsUnidades.filter((i) => numero(ultAd[i]) !== null)
+        .map((i) => ({ nome: nomeLimpo(ad[0][i]), valor: arred2(numero(ultAd[i]) * 100) }))
+    };
+
+    // VCT: uma linha por unidade e tipo; colunas de mês a partir da E; mês de referência = último mês preenchido
+    const vc = abaDe(wb, 'vct');
+    const colsMesVct = [];
+    for (let i = 4; i < vc[0].length; i++) {
+      const m = mesIdx(vc[0][i]);
+      if (m >= 0) colsMesVct.push({ col: i, mes: m });
+    }
+    const linhasVct = vc.slice(1).filter((r) => r && nomeLimpo(r[1]) && r[2]);
+    const mesVct = Math.max(...linhasVct.flatMap((r) => colsMesVct.filter((c) => numero(r[c.col]) !== null).map((c) => c.mes)));
+    const colVct = colsMesVct.find((c) => c.mes === mesVct).col;
+    const anoVct = linhasVct[0][0];
+    const unidadesVct = [...new Set(linhasVct.map((r) => nomeLimpo(r[1])))];
+    const achar = (u, tipo) => linhasVct.find((r) => nomeLimpo(r[1]) === u && norm(r[2]).startsWith(tipo));
+    const valorVct = (r) => (r ? numero(r[colVct]) : null);
+    const planoVct = (r) => (r ? numero(r[3]) || 0 : 0);
+    const refVct = MESES_NOME[mesVct] + ' ' + anoVct;
+    const vct = {
+      quantidades: {
+        titulo: 'Quantidades realizadas por unidade',
+        referencia: refVct,
+        unidades: unidadesVct.map((u) => {
+          const tec = achar(u, 'tecnico');
+          const lid = achar(u, 'lideranca');
+          return { nome: u, tecnicos: valorVct(tec) || 0, supervisores: valorVct(lid) || 0, planejado: planoVct(tec) + planoVct(lid) };
+        })
+      },
+      auditorias: {
+        titulo: 'Resultados das auditorias VCT',
+        referencia: refVct,
+        unidades: unidadesVct.map((u) => {
+          const res = valorVct(achar(u, 'resultat'));
+          return { nome: u, resultado: res === null ? null : arred2(res * 100), naoConformes: valorVct(achar(u, 'itens')) || 0 };
+        })
+      }
+    };
+
+    // Gestão de Desvios: linhas Desvios / Resolvidos / Pendentes por unidade; meses a partir da D
+    const gd = abaDe(wb, 'desvios');
+    const colsMesDesv = [];
+    for (let i = 3; i < gd[0].length; i++) {
+      const m = mesIdx(gd[0][i]);
+      if (m >= 0) colsMesDesv.push({ col: i, mes: m });
+    }
+    const linhasDesv = gd.slice(1).filter((r) => r && nomeLimpo(r[0]) && norm(r[1]));
+    const mesDesv = Math.max(...linhasDesv.filter((r) => norm(r[1]) === 'desvios')
+      .flatMap((r) => colsMesDesv.filter((c) => numero(r[c.col]) !== null).map((c) => c.mes)));
+    const anoDesv = String(linhasDesv[0][2]).trim();
+    const colMesDesv = colsMesDesv.find((c) => c.mes === mesDesv).col;
+    const unidadesDesv = [...new Set(linhasDesv.map((r) => nomeLimpo(r[0])))];
+    const linhaDesv = (u, tipo) => linhasDesv.find((r) => nomeLimpo(r[0]) === u && norm(r[1]) === tipo);
+    const somaAte = (r) => (r ? colsMesDesv.filter((c) => c.mes <= mesDesv).reduce((s, c) => s + (numero(r[c.col]) || 0), 0) : 0);
+    const porGerencia = unidadesDesv.map((u) => ({ nome: u, valor: somaAte(linhaDesv(u, 'desvios')) }));
+    const somaTipo = (tipo) => unidadesDesv.reduce((s, u) => s + somaAte(linhaDesv(u, tipo)), 0);
+    const desvios = {
+      titulo: 'Nº de desvios por gerência e situação',
+      referencia: 'Janeiro a ' + MESES_NOME[mesDesv] + ' de ' + anoDesv,
+      mesReferencia: MESES_NOME[mesDesv] + ' ' + anoDesv,
+      mes: soma(unidadesDesv.map((u) => { const r = linhaDesv(u, 'desvios'); return r ? numero(r[colMesDesv]) || 0 : 0; })),
+      porGerencia: porGerencia,
+      porSituacao: [{ nome: 'Resolvidos', valor: somaTipo('resolvidos') }, { nome: 'Pendentes', valor: somaTipo('pendentes') }]
+    };
+
+    // Inspeções mensais: Meta e Executado por unidade no último mês com execução preenchida
+    const ins = abaDe(wb, 'inspecoes');
+    const linhasIns = ins.slice(1).filter((r) => r && nomeLimpo(r[2]));
+    const mesIns = Math.max(...linhasIns.filter((r) => numero(r[4]) !== null).map((r) => mesIdx(r[1])));
+    const anoIns = String(linhasIns[0][0]).trim();
+    const inspecoes = {
+      titulo: 'Inspeções mensais de segurança · ' + MESES_NOME[mesIns],
+      referencia: MESES_NOME[mesIns] + ' ' + anoIns,
+      unidades: linhasIns.filter((r) => mesIdx(r[1]) === mesIns).map((r) => {
+        const meta = numero(r[3]) || 0;
+        const exec = numero(r[4]) || 0;
+        return { nome: nomeLimpo(r[2]), meta: meta, executado: exec, resultado: meta ? arred2((exec / meta) * 100) : 0 };
+      })
+    };
+
+    const dados = {
+      meta: {
+        evento: EVENTO,
+        gerencia: GERENCIA,
+        periodo: periodo,
+        referencia: desvios.mesReferencia,
+        aviso: 'Fonte: planilha "KPI’s Segurança do Trabalho" no Google Drive.'
+      },
+      pauta: pauta,
+      aderencia: aderencia,
+      vct: vct,
+      desvios: desvios,
+      inspecoes: inspecoes
+    };
+    if (!dados.pauta.length || !dados.aderencia.unidades.length || !dados.vct.quantidades.unidades.length || !dados.desvios.porGerencia.length || !dados.inspecoes.unidades.length) {
+      throw new Error('estrutura da planilha diferente do esperado');
+    }
+    return dados;
   }
 
   async function carregarPlanilha() {
-    const url = 'https://docs.google.com/spreadsheets/d/' + SHEET_ID + '/gviz/tq?tqx=out:csv&_=' + Date.now();
-    const resp = await fetch(url);
+    const resp = await fetch(URL_PLANILHA + '&_=' + Date.now(), { cache: 'no-store' });
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
-    const linhas = parseCsv(await resp.text()).slice(1).filter((l) => l[0]);
-    if (linhas.length < 50) throw new Error('planilha vazia');
-    const raiz = {};
-    for (const [caminho, valor] of linhas) {
-      const partes = caminho.split('.');
-      let no = raiz;
-      partes.forEach((p, i) => {
-        const ultimo = i === partes.length - 1;
-        if (ultimo) { no[p] = tipar(valor === undefined ? '' : valor); return; }
-        if (no[p] === undefined) no[p] = /^\d+$/.test(partes[i + 1]) ? [] : {};
-        no = no[p];
-      });
-    }
-    if (!raiz.meta || !raiz.meta.evento || !raiz.meta.gerencia || !raiz.aderencia || !raiz.vct || !raiz.cronograma) throw new Error('estrutura inesperada');
-    return raiz;
+    if (typeof XLSX === 'undefined') throw new Error('biblioteca de leitura de planilha não carregou');
+    const wb = XLSX.read(await resp.arrayBuffer(), { type: 'array' });
+    return montarDados(wb);
   }
 
   // ---------- início ----------
@@ -791,17 +615,11 @@
     let dados;
     try {
       dados = await carregarPlanilha();
-    } catch (e0) {
-      console.warn('Planilha indisponível, usando data/forum.json:', e0);
-    }
-    try {
-      if (!dados) {
-        const resp = await fetch('data/forum.json', { cache: 'no-cache' });
-        if (!resp.ok) throw new Error('HTTP ' + resp.status);
-        dados = await resp.json();
-      }
     } catch (e) {
-      conteudo.replaceChildren(h('p', { class: 'erro' }, 'Não foi possível carregar os dados (data/forum.json). ' + e.message));
+      console.error(e);
+      conteudo.replaceChildren(h('p', { class: 'erro' },
+        'Não foi possível carregar a planilha do Google Drive (' + e.message + '). ' +
+        'Confirme que o arquivo está compartilhado com "qualquer pessoa com o link" e recarregue a página.'));
       return;
     }
     renderPagina(dados);

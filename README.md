@@ -3,8 +3,8 @@
 Dashboard estático dos gráficos do fórum (Gerência de Mineração Nordeste/Underground), publicado com GitHub Pages.
 
 - **Site:** https://silvathiagoferreira.github.io/forum-seguranca-setembro-2026/
-- **Dados:** `docs/data/forum.json`. Os valores são **fictícios**, só para validar o layout. Para usar dados reais, troque o JSON mantendo a mesma estrutura.
-- **PowerPoint:** o botão **Baixar PowerPoint** gera o `.pptx` consolidado no próprio navegador, no padrão das lâminas clean (15 slides, gráficos nativos editáveis).
+- **Dados:** lidos ao vivo da planilha `KPI's Segurança do Trabalho (Gerencia de Mineraçao Nordeste e Undergroud).xlsx` no Google Drive (ID `14LdgBH2N-EUjuCBsdlh_NzeWPv6o85jU`), via `export?format=xlsx`. A planilha precisa estar compartilhada com "qualquer pessoa com o link". Não há outra fonte de dados.
+- **PowerPoint:** o botão **Baixar PowerPoint** gera o `.pptx` consolidado no próprio navegador, no padrão das lâminas clean (gráficos nativos editáveis), com os mesmos dados da página.
 
 ## Estrutura
 

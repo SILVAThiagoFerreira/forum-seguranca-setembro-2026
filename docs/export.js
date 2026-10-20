@@ -8,8 +8,6 @@
   };
   var FONT = 'Arial';
   var X0 = 0.5, X1 = 12.83, W = 12.33;
-  var MESES = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-  var COR_NOME = { vermelho: C.verm, laranja: C.laranja, verde: C.verde, azul: C.azul };
 
   function soma(arr, f) { return arr.reduce(function (s, x) { return s + f(x); }, 0); }
   function num(v, casas) { return Number(v).toFixed(casas || 0).replace('.', ','); }
@@ -128,8 +126,7 @@
       pptx.layout = 'LAYOUT_WIDE';
       pptx.title = d.meta.evento + ' - ' + d.meta.periodo;
       var ctx = { logos: logos, dim: { enaex: tamanhoPng(logos.enaex) } };
-      var s, i;
-      var ref = d.meta.referencia;
+      var s;
 
       // 1. Capa
       // Capa no padrão de relatório corporativo: fundo branco, título vermelho em caixa alta, logo colorida
@@ -162,7 +159,7 @@
       var vals = ad.unidades.map(function (u) { return u.valor; });
       var media = soma(vals, function (v) { return v; }) / vals.length;
       var atingiu = vals.filter(function (v) { return v >= ad.meta; }).length;
-      s = lamina(pptx, ctx, { titulo: ad.titulo, sub: ad.subtitulo, secao: 'Aderência média por unidade:', nota: 'valores fictícios. A linha tracejada indica a meta de ' + ad.meta + '%.' });
+      s = lamina(pptx, ctx, { titulo: ad.titulo, sub: ad.subtitulo + ' Referência: ' + ad.referencia + '.', secao: 'Aderência média por unidade:', nota: 'a linha tracejada indica a meta de ' + ad.meta + '%.' });
       var cats = ad.unidades.map(function (u) { return u.nome; });
       s.addChart([
         { type: 'bar', data: [{ name: 'Aderência (%)', labels: cats, values: vals }], options: opcChart({
@@ -173,7 +170,7 @@
       ], opcChart({ x: X0, y: 2.0, w: 9.2, h: 4.05, valAxisMinVal: 0, valAxisMaxVal: 110, valAxisMajorUnit: 20, valAxisLabelFormatCode: '0.0', catAxisLabelFontSize: 9 }));
       kpi(s, 10.0, 2.2, 2.83, 1.3, num(media, 1) + '%', 'Média geral', C.verm);
       kpi(s, 10.0, 3.75, 2.83, 1.3, atingiu + ' de ' + vals.length, 'unidades atingiram a meta', atingiu === vals.length ? C.verde : C.verm, 24);
-      kpi(s, 10.0, 5.0 + 0.3, 2.83, 0.7, ad.meta + '%', 'Meta', C.escuro, 18);
+      kpi(s, 10.0, 5.3, 2.83, 0.7, ad.meta + '%', 'Meta', C.escuro, 18);
 
       // 4. VCT quantidades
       var vq = d.vct.quantidades;
@@ -184,7 +181,7 @@
       var tReal = tTec + tSup;
       var varPct = tPlan ? (tReal - tPlan) / tPlan * 100 : 0;
       var abaixo = us.filter(function (u) { return u.tecnicos + u.supervisores < u.planejado; }).map(function (u) { return u.nome; });
-      s = lamina(pptx, ctx, { titulo: vq.titulo, sub: vq.referencia, secao: 'VCT realizados x planejados por unidade:',
+      s = lamina(pptx, ctx, { titulo: vq.titulo, sub: 'Referência: ' + vq.referencia, secao: 'VCT realizados x planejados por unidade:',
         nota: abaixo.length ? 'unidades abaixo do planejado: ' + abaixo.join('; ') + '.' : 'todas as unidades atingiram o planejado.' });
       var kw = 1.45, kg = 0.17;
       [[tTec, 'Técnicos', C.laranja], [tSup, 'Supervisores', C.amarelo], [tReal, 'Realizado', C.medio], [tPlan, 'Planejado', C.verde], [sinal(varPct, 0), 'Variação vs. planejado', varPct < 0 ? C.verm : C.verde]].forEach(function (k, j) {
@@ -199,162 +196,57 @@
       ], { x: X0, y: 3.0, w: W, h: 3.05, chartColors: [C.laranja, C.amarelo, C.medio, C.verde], showLegend: true, legendPos: 'b',
         dataLabelFontSize: 8, catAxisLabelFontSize: 9, valAxisMinVal: 0, valAxisMajorUnit: 1, barGapWidthPct: 40 });
 
-      // 5. VCT auditorias
+      // 5. VCT auditorias (resultado médio e itens não conformes por unidade)
       var au = d.vct.auditorias;
-      var conf = soma(au.procedimentos, function (p) { return p.conforme; });
-      var nconf = soma(au.procedimentos, function (p) { return p.naoConforme; });
-      var tot = conf + nconf;
-      var idx = tot ? conf / tot * 100 : 0;
-      s = lamina(pptx, ctx, { titulo: au.titulo, sub: au.referencia, secao: 'Auditorias de VCT por procedimento:' });
-      [[conf, 'Conformes', C.verde], [nconf, 'Não conformes', C.verm], [tot, 'Total', C.escuro], [num(idx, 1) + '%', 'Índice de conformidade', idx >= au.meta ? C.verde : C.verm], ['≥ ' + au.meta + '%', 'Meta', C.escuro]].forEach(function (k, j) {
-        kpi(s, X0 + j * 2.5, 1.98, 2.33, 0.95, k[0], k[1], k[2], 24);
+      var com = au.unidades.filter(function (u) { return u.resultado !== null; });
+      var resMedio = com.length ? soma(com, function (u) { return u.resultado; }) / com.length : 0;
+      var nconf = soma(au.unidades, function (u) { return u.naoConformes; });
+      var cem = com.filter(function (u) { return u.resultado >= 100; }).length;
+      s = lamina(pptx, ctx, { titulo: au.titulo, sub: 'Referência: ' + au.referencia, secao: 'Resultado da verificação do VCT por unidade:' });
+      [[num(resMedio, 0) + '%', 'Resultado médio', resMedio >= 100 ? C.verde : C.verm], [nconf, 'Itens não conformes', nconf ? C.verm : C.verde], [cem + ' de ' + com.length, 'Unidades com 100%', cem === com.length ? C.verde : C.escuro]].forEach(function (k, j) {
+        kpi(s, X0 + j * 4.2, 1.98, 3.9, 0.95, k[0], k[1], k[2], 24);
       });
-      var rows = [[cab('Procedimento auditado'), cab('Conforme', { align: 'center' }), cab('Não conforme', { align: 'center' }), cab('Principais desvios')]];
-      au.procedimentos.forEach(function (p, j) {
-        rows.push([cel(p.nome, j), cel(p.conforme, j, { align: 'center' }), cel(p.naoConforme, j, { align: 'center', bold: p.naoConforme > 0, color: p.naoConforme > 0 ? C.verm : C.escuro }), cel(vazio(p.desvio), j)]);
+      var rows = [[cab('Unidade'), cab('Resultado médio', { align: 'center' }), cab('Itens não conformes', { align: 'center' })]];
+      au.unidades.forEach(function (u, j) {
+        rows.push([cel(u.nome, j), cel(u.resultado === null ? '—' : num(u.resultado, 0) + '%', j, { align: 'center' }), cel(u.naoConformes, j, { align: 'center', bold: u.naoConformes > 0, color: u.naoConformes > 0 ? C.verm : C.escuro })]);
       });
-      tabela(s, rows, X0, 3.1, W, [4.9, 1.1, 1.3, 5.03], 0.33);
+      tabela(s, rows, X0, 3.1, W, [6.33, 3.0, 3.0], 0.3);
 
       // 6. Desvios
       var dv = d.desvios;
       var totalDv = soma(dv.porGerencia, function (g) { return g.valor; });
-      s = lamina(pptx, ctx, { titulo: dv.titulo, sub: dv.referencia, cabecalhos: [{ t: 'Nº de desvios por gerência:', x: X0, w: 6, fs: 16 }, { t: 'Nº de desvios por categoria:', x: 6.8, w: 6, fs: 16 }] });
+      s = lamina(pptx, ctx, { titulo: dv.titulo, sub: 'Referência: ' + dv.referencia, cabecalhos: [{ t: 'Nº de desvios por gerência:', x: X0, w: 6, fs: 16 }, { t: 'Desvios por situação:', x: 6.8, w: 6, fs: 16 }] });
       var ordenar = function (a) { return a.slice().sort(function (p, q) { return q.valor - p.valor; }).reverse(); };
-      var g = ordenar(dv.porGerencia), cg = ordenar(dv.porCategoria);
+      var g = ordenar(dv.porGerencia), sit = ordenar(dv.porSituacao);
       addBar(s, g.map(function (x) { return x.nome; }), [{ name: 'Desvios', values: g.map(function (x) { return x.valor; }) }],
         { x: X0, y: 2.55, w: 6.0, h: 4.3, barDir: 'bar', chartColors: [C.verm], catAxisLabelFontSize: 9, valAxisHidden: true, valGridLine: { style: 'none' } });
-      addBar(s, cg.map(function (x) { return x.nome; }), [{ name: 'Desvios', values: cg.map(function (x) { return x.valor; }) }],
+      addBar(s, sit.map(function (x) { return x.nome; }), [{ name: 'Desvios', values: sit.map(function (x) { return x.valor; }) }],
         { x: 6.8, y: 2.55, w: 6.03, h: 4.3, barDir: 'bar', chartColors: [C.escuro], catAxisLabelFontSize: 9, valAxisHidden: true, valGridLine: { style: 'none' } });
       texto(s, [{ text: String(totalDv), options: { bold: true, color: C.verm, fontSize: 28 } }, { text: '  desvios no total', options: { color: C.medio, fontSize: 12 } }], X0, 1.95, 6, 0.55, { valign: 'middle' });
 
-      // 7. GUT
-      var gu = dv.gut;
-      s = lamina(pptx, ctx, { titulo: gu.titulo, sub: dv.referencia, cabecalhos: [{ t: 'Desvios por classe:', x: X0, w: 3.4, fs: 14 }, { t: 'Desvios por nota GUT:', x: 4.3, w: 5, fs: 14 }, { t: 'GUT alto por gerência:', x: 9.6, w: 3.2, fs: 14 }] });
-      var cc = { Baixa: C.verde, 'Média': C.amarelo, Alta: C.verm };
-      addBar(s, gu.classes.map(function (x) { return x.nome; }), [{ name: 'Desvios', values: gu.classes.map(function (x) { return x.valor; }) }],
-        { x: X0, y: 2.0, w: 3.5, h: 4.5, chartColors: gu.classes.map(function (x) { return cc[x.nome] || C.medio; }), valAxisMinVal: 0 });
-      var nt = gu.notas.slice().sort(function (a, b) { return a.nota - b.nota; });
-      addBar(s, nt.map(function (x) { return String(x.nota); }), [{ name: 'Desvios', values: nt.map(function (x) { return x.valor; }) }],
-        { x: 4.3, y: 2.0, w: 5.1, h: 4.5, chartColors: nt.map(function (x) { return x.nota >= 10 ? C.verm : C.escuro; }), valAxisMinVal: 0, barGapWidthPct: 30 });
-      var rg = [[cab('Gerência'), cab('Valor', { align: 'center' })]];
-      gu.altoPorGerencia.forEach(function (x, j) { rg.push([cel(x.nome, j), cel(x.valor, j, { align: 'center' })]); });
-      var tAlto = soma(gu.altoPorGerencia, function (x) { return x.valor; });
-      rg.push([cel('Total', 1, { bold: true }), cel(tAlto, 1, { bold: true, align: 'center' })]);
-      tabela(s, rg, 9.6, 2.2, 3.23, [2.4, 0.83], 0.36);
-
-      // 8. OKR
-      var ok = d.okr;
-      s = lamina(pptx, ctx, { titulo: ok.titulo, sub: ok.indicador, secao: 'Resultado mensal (' + ok.unidade + ') e meta de ' + ok.meta + '%:' });
-      var cm = ok.meses.map(function (m) { return m.mes; });
-      s.addChart([
-        { type: 'bar', data: [{ name: 'Valor (%)', labels: cm, values: ok.meses.map(function (m) { return m.valor; }) }], options: opcChart({ chartColors: [C.verm], dataLabelFormatCode: '0', barGapWidthPct: 40 }) },
-        { type: 'line', data: [{ name: 'Meta', labels: cm, values: cm.map(function () { return ok.meta; }) }], options: { chartColors: [C.verde], lineSize: 1.5, lineDash: 'dash', lineDataSymbol: 'none', showValue: false } }
-      ], opcChart({ x: X0, y: 2.0, w: 8.2, h: 4.5, valAxisMinVal: 0, valAxisMaxVal: 100, valAxisMajorUnit: 20 }));
-      var ultimo = ok.meses[ok.meses.length - 1];
-      var rk = [[cab('Indicador'), cab('Valor (' + ok.unidade + ')', { align: 'center' })]];
-      ok.kpis.forEach(function (k, j) { rk.push([cel(k.nome, j), cel(k.valor, j, { align: 'center' })]); });
-      rk.push([cel('Último mês (' + ultimo.mes + ')', ok.kpis.length, { bold: true }), cel(ultimo.valor, ok.kpis.length, { bold: true, align: 'center', color: C.verm })]);
-      rk.push([cel('Meta', ok.kpis.length + 1, {}), cel(ok.meta, ok.kpis.length + 1, { align: 'center' })]);
-      tabela(s, rk, 9.1, 2.3, 3.73, [2.4, 1.33], 0.55);
-
-      // 9 e 10. Flyrock / Misfire
-      [d.flyrock, d.misfire].forEach(function (b, n) {
-        var s2 = lamina(pptx, ctx, { titulo: b.titulo, sub: String(b.ano), secao: 'Ocorrências por mês em ' + b.ano + ':' });
-        addBar(s2, MESES, [{ name: 'Ocorrências', values: b.mensal }], { x: X0, y: 1.95, w: 7.6, h: 3.4, chartColors: [C.escuro], dataLabelFormatCode: '0', valAxisMinVal: 0, valAxisMajorUnit: 1, valAxisLabelFormatCode: '0' });
-        b.classes.forEach(function (c, j) {
-          var cx = 8.4 + (j % 2) * 2.25, cy = 2.0 + Math.floor(j / 2) * 1.5;
-          s2.addShape('rect', { x: cx, y: cy, w: 2.15, h: 1.4, fill: { color: COR_NOME[c.cor] || C.medio } });
-          texto(s2, String(c.valor), cx + 0.05, cy + 0.03, 2.05, 0.4, { fontSize: 20, bold: true, color: C.branco, align: 'center', valign: 'middle' });
-          texto(s2, c.nome, cx + 0.07, cy + 0.5, 2.01, 0.85, { fontSize: 8, color: C.branco, align: 'center', valign: 'top', fit: 'shrink' });
-        });
-        s2.addText([{ text: 'Desvios relacionados: ', options: { color: C.medio, fontSize: 12 } }, { text: String(b.desviosRelacionados), options: { bold: true, color: C.verm, fontSize: 20 } }],
-          { x: 8.4, y: 5.0, w: 4.4, h: 0.4, fontFace: FONT, align: 'center', valign: 'middle', margin: 0 });
-        var ev = b.eventos.length ? b.eventos : ['—'];
-        texto(s2, 'Eventos', X0, 5.55, W, 0.25, { fontSize: 11, bold: true });
-        var itens = n === 0
-          ? ev.map(function (t, j) { return { text: t, options: { breakLine: j < ev.length - 1 } }; })
-          : ev.map(function (t, j) { return { text: t, options: { bullet: true, breakLine: j < ev.length - 1 } }; });
-        texto(s2, itens, X0, 5.85, W, 1.0, { fontSize: 10 });
+      // 7. Inspeções mensais
+      var ic = d.inspecoes;
+      var metaT = soma(ic.unidades, function (u) { return u.meta; });
+      var execT = soma(ic.unidades, function (u) { return u.executado; });
+      var resT = metaT ? execT / metaT * 100 : 0;
+      s = lamina(pptx, ctx, { titulo: ic.titulo, sub: 'Referência: ' + ic.referencia, cabecalhos: [{ t: 'Meta e executado por unidade:', x: X0, w: W, fs: 16 }] });
+      [[metaT, 'Meta (QTD)', C.escuro], [execT, 'Executado (QTD)', C.verde], [num(resT, 0) + '%', 'Resultado', resT >= 100 ? C.verde : C.verm]].forEach(function (k, j) {
+        kpi(s, X0 + j * 4.2, 1.98, 3.9, 0.95, k[0], k[1], k[2], 24);
       });
-
-      // 11. Cruz Verde
-      var cv = d.cruzVerde;
-      s = lamina(pptx, ctx, { titulo: cv.titulo, sub: cv.mes, cabecalhos: [{ t: 'Calendário do mês:', x: X0, w: 6, fs: 16 }, { t: 'Ocorrências:', x: 7.0, w: 5.8, fs: 16 }] });
-      var cor = { ok: C.verde, ocorrencia: C.amarelo, dano_pessoal: C.laranja };
-      var sz = 0.58, gp = 0.08;
-      cv.dias.forEach(function (st, j) {
-        var x = X0 + (j % 7) * (sz + gp), y = 2.1 + Math.floor(j / 7) * (sz + gp);
-        s.addShape('rect', { x: x, y: y, w: sz, h: sz, fill: { color: cor[st] || C.claro }, line: { color: C.branco, width: 0.5 } });
-        texto(s, String(j + 1), x, y, sz, sz, { fontSize: 10, bold: true, color: st === 'ocorrencia' ? C.escuro : C.branco, align: 'center', valign: 'middle' });
+      var ri = [[cab('Unidade de serviço'), cab('Meta (QTD)', { align: 'center' }), cab('Executado (QTD)', { align: 'center' }), cab('Resultado', { align: 'center' }), cab('Variação', { align: 'center' })]];
+      ic.unidades.forEach(function (u, j) {
+        ri.push([cel(u.nome, j), cel(u.meta, j, { align: 'center' }), cel(u.executado, j, { align: 'center' }), cel(num(u.resultado, 0) + '%', j, { align: 'center' }), cel(sinal(u.resultado - 100, 0) + '%', j, { align: 'center', bold: u.resultado < 100, color: u.resultado < 100 ? C.verm : C.escuro })]);
       });
-      [['ok', 'Sem ocorrência'], ['ocorrencia', 'Ocorrência'], ['dano_pessoal', 'Dano pessoal']].forEach(function (l, j) {
-        var ly = 2.2 + j * 0.5;
-        s.addShape('rect', { x: 5.35, y: ly, w: 0.3, h: 0.3, fill: { color: cor[l[0]] }, line: { color: cor[l[0]], width: 0.5 } });
-        texto(s, l[1], 5.75, ly, 1.2, 0.3, { fontSize: 10, valign: 'middle' });
-      });
-      var montar = function (tit, arr) {
-        var r = [[cab('Data'), cab('Descrição')]];
-        if (!arr.length) r.push([cel('—', 0), cel('—', 0)]);
-        arr.forEach(function (x, j) { r.push([cel(x.data, j), cel(x.descricao, j)]); });
-        return r;
-      };
-      texto(s, 'Danos pessoais', 7.0, 1.95, 5.8, 0.25, { fontSize: 11, bold: true });
-      tabela(s, montar('Pessoais', cv.danosPessoais), 7.0, 2.22, 5.83, [1.0, 4.83], 0.3);
-      var yM = 2.22 + 0.3 * (Math.max(cv.danosPessoais.length, 1) + 1) + 0.25;
-      texto(s, 'Danos materiais', 7.0, yM, 5.8, 0.25, { fontSize: 11, bold: true });
-      tabela(s, montar('Materiais', cv.danosMateriais), 7.0, yM + 0.27, 5.83, [1.0, 4.83], 0.3);
-
-      // 12. Boas práticas
-      var bp = d.boasPraticas;
-      s = lamina(pptx, ctx, { titulo: bp.titulo, sub: bp.unidade + ' - ' + bp.referencia, secao: 'Indicadores de ' + bp.unidade + ':' });
-      bp.indicadores.forEach(function (k, j) {
-        kpi(s, X0 + (j % 2) * 6.25, 2.1 + Math.floor(j / 2) * 2.35, 5.83, 2.1, k.valor, k.nome, C.verm, 48);
-      });
-
-      // 13. Kaizen
-      var kz = d.kaizen;
-      var atual = soma(kz.unidades, function (u) { return u.valor; });
-      var evo = (atual - kz.anterior) / kz.anterior * 100;
-      var mx = Math.max.apply(null, kz.unidades.map(function (u) { return u.valor; }));
-      s = lamina(pptx, ctx, { titulo: kz.titulo, sub: kz.periodo, secao: 'Kaizens acumulados por unidade:' });
-      addBar(s, kz.unidades.map(function (u) { return u.nome; }), [{ name: 'Kaizens', values: kz.unidades.map(function (u) { return u.valor; }) }],
-        { x: X0, y: 2.0, w: 9.2, h: 4.6, chartColors: [C.escuro], dataLabelFormatCode: '0', valAxisMinVal: 0, valAxisMaxVal: Math.ceil(mx / 10) * 10, valAxisLabelFormatCode: '0', catAxisLabelFontSize: 9 });
-      kpi(s, 10.0, 2.1, 2.83, 1.2, kz.anterior, 'Total anterior', C.medio);
-      kpi(s, 10.0, 3.5, 2.83, 1.2, atual, 'Total atual', C.escuro);
-      kpi(s, 10.0, 4.9, 2.83, 1.2, sinal(evo, 2), 'Evolução', evo >= 0 ? C.verde : C.verm);
-
-      // 14. Inspeções cruzadas
-      var ic = d.inspecoesCruzadas;
-      s = lamina(pptx, ctx, { titulo: ic.titulo, sub: d.meta.periodo, secao: 'Programação por mês:' });
-      var stTxt = { S: ['Realizado', C.verde], N: ['Não realizado', C.verm], P: ['Programado', C.medio] };
-      var cw = (W - 2.1) / ic.colunas.length;
-      var ri = [[cab('Período')].concat(ic.colunas.map(function (c) { return cab(c, { align: 'center' }); }))];
-      ri.push([cel('Responsável pela inspeção', 0, { bold: true })].concat(ic.responsavel.map(function (t) { return cel(vazio(t), 0, { align: 'center' }); })));
-      ri.push([cel('Unidade a ser inspecionada', 1, { bold: true })].concat(ic.inspecionada.map(function (t) { return cel(vazio(t), 1, { align: 'center' }); })));
-      ri.push([cel('Status', 0, { bold: true })].concat(ic.status.map(function (t) {
-        var m = stTxt[t] || [vazio(t), C.medio];
-        return cel(m[0], 0, { align: 'center', bold: true, color: m[1] });
-      })));
-      tabela(s, ri, X0, 2.2, W, [2.1].concat(ic.colunas.map(function () { return cw; })), [0.5, 1.5, 1.5, 0.7]);
-
-      // 15. Cronograma
-      var cr = d.cronograma;
-      s = lamina(pptx, ctx, { titulo: cr.titulo, sub: d.meta.periodo, secao: 'Apresentações do ano:' });
-      var stC = { realizado: ['Realizado', C.verde], sem_forum: ['Sem fórum', C.escuro], pendente: ['Pendente', C.medio] };
-      var rc = [[cab('Mês'), cab('Apresentador'), cab('Unidade'), cab('Status', { align: 'center' })]];
-      cr.itens.forEach(function (it, j) {
-        var m = stC[it.status] || [vazio(it.status), C.medio];
-        rc.push([cel(it.mes, j), cel(vazio(it.apresentador), j), cel(vazio(it.unidade), j), cel(m[0], j, { align: 'center', bold: true, color: m[1] })]);
-      });
-      tabela(s, rc, X0, 2.05, W, [2.8, 3.6, 3.6, 2.33], 0.38);
+      tabela(s, ri, X0, 3.1, W, [4.33, 2.0, 2.0, 2.0, 2.0], 0.3);
 
       return pptx;
     });
   }
 
   function baixarApresentacao(dados) {
+    var nome = 'Forum_Seguranca_' + String(dados.meta.periodo).trim().replace(/\s+/g, '_') + '.pptx';
     return construirApresentacao(dados, {}).then(function (pptx) {
-      return pptx.writeFile({ fileName: 'Forum_Seguranca_Setembro_2026.pptx' });
+      return pptx.writeFile({ fileName: nome });
     });
   }
 
