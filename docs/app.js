@@ -126,7 +126,7 @@
     return {
       type: 'bar',
       data: {
-        labels: u.map((x) => x.nome),
+        labels: u.map((x) => quebrarNome(x.nome)),
         datasets: series.map((s) => Object.assign({}, s, {
           borderRadius: 2,
           maxBarThickness: 26,
@@ -169,14 +169,125 @@
     };
   }
 
+  // Nome de unidade em até três linhas (rótulos do eixo não se sobrepõem)
+  function quebrarNome(nome) {
+    const linhas = [];
+    let atual = '';
+    String(nome).split(' ').forEach((p) => {
+      if (atual && (atual + ' ' + p).length > 13) { linhas.push(atual); atual = p; }
+      else atual = atual ? atual + ' ' + p : p;
+    });
+    if (atual) linhas.push(atual);
+    return linhas;
+  }
+
+  function chartInspecoes(i) {
+    const labels = i.unidades.map((u) => quebrarNome(u.nome));
+    const maximo = Math.max(...i.unidades.flatMap((u) => [u.realizado, u.meta]));
+    return {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [
+          {
+            label: 'Quantidade realizada', data: i.unidades.map((u) => u.realizado),
+            backgroundColor: COR.ardosia, borderRadius: 2, maxBarThickness: 36,
+            datalabels: { display: true, anchor: 'end', align: 'end', offset: 1, color: COR.ardosia, font: { size: 10, weight: '700' }, formatter: (x) => fmt(x) }
+          },
+          {
+            label: 'Meta' + (i.meta !== null ? ' (' + fmt(i.meta) + ' inspeções)' : ''), data: i.unidades.map((u) => u.meta),
+            backgroundColor: COR.vermelho, borderRadius: 2, maxBarThickness: 36,
+            datalabels: { display: true, anchor: 'end', align: 'end', offset: 1, color: COR.ardosia, font: { size: 10, weight: '700' }, formatter: (x) => fmt(x) }
+          }
+        ]
+      },
+      options: configBase({
+        plugins: { legend: { position: 'bottom' } },
+        scales: {
+          y: { beginAtZero: true, suggestedMax: maximo + 1, ticks: { stepSize: 1 }, grid: { color: COR.grade } },
+          x: { grid: { display: false }, ticks: { autoSkip: false, maxRotation: 0, font: { size: 10 } } }
+        }
+      })
+    };
+  }
+
+  // Desvios por unidade: resolvidos (escuro) + pendentes (vermelho), empilhados na horizontal
+  function chartDesviosEmpilhado(itens) {
+    const ordenado = itens.slice().sort((a, b) => a.valor - b.valor).reverse();
+    return {
+      type: 'bar',
+      data: {
+        labels: ordenado.map((x) => x.nome),
+        datasets: [
+          {
+            label: 'Resolvidos', data: ordenado.map((x) => x.resolvidos), backgroundColor: COR.ardosia, borderRadius: 0, maxBarThickness: 22,
+            datalabels: { display: true, anchor: 'center', align: 'center', color: '#fff', font: { weight: '700', size: 10 }, formatter: (x) => (x ? fmt(x) : '') }
+          },
+          {
+            label: 'Pendentes', data: ordenado.map((x) => x.pendentes), backgroundColor: COR.alerta, borderRadius: 0, maxBarThickness: 22,
+            datalabels: { display: true, anchor: 'center', align: 'center', color: '#fff', font: { weight: '700', size: 10 }, formatter: (x) => (x ? fmt(x) : '') }
+          }
+        ]
+      },
+      options: configBase({
+        indexAxis: 'y',
+        plugins: { legend: { position: 'bottom' } },
+        scales: {
+          x: { stacked: true, beginAtZero: true, grid: { color: COR.grade } },
+          y: { stacked: true, grid: { display: false }, ticks: { autoSkip: false, font: { size: 10 } } }
+        }
+      })
+    };
+  }
+
+  function chartResolucao(serie) {
+    return {
+      type: 'bar',
+      data: {
+        labels: serie.map((m) => m.mes),
+        datasets: [{
+          label: 'Resolução (%)', data: serie.map((m) => m.conclusao),
+          backgroundColor: COR.ardosia, borderRadius: 2, maxBarThickness: 48,
+          datalabels: { display: true, anchor: 'end', align: 'end', offset: 2, color: COR.ardosia, font: { weight: '700', size: 10 }, formatter: (v) => fmt(v, 1) + '%' }
+        }]
+      },
+      options: configBase({
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { min: 0, max: 110, ticks: { stepSize: 20, callback: (v) => v + '%' }, grid: { color: COR.grade } },
+          x: { grid: { display: false }, ticks: { autoSkip: false, font: { size: 10 } } }
+        }
+      })
+    };
+  }
+
   // ---------- lâminas ----------
   function renderPauta(d) {
+    const metade = Math.ceil(d.pauta.length / 2);
+    const colunas = [d.pauta.slice(0, metade), d.pauta.slice(metade)];
     return bloco({
       id: 'pauta',
-      kicker: 'Lâmina 1 · Abertura',
-      titulo: 'Pautas do fórum',
-      sub: 'Principais assuntos que serão abordados na reunião · ' + d.meta.periodo,
-      corpo: h('ol', { class: 'pauta' }, d.pauta.map((p) => h('li', {}, p)))
+      kicker: 'Lâmina 1 - Abertura',
+      titulo: 'PAUTA',
+      sub: d.meta.periodo,
+      corpo: h('div', { class: 'pauta-duas' }, colunas.map((col, c) => h('ol', { class: 'pauta', start: c * metade + 1 }, col.map((p) => h('li', {}, p)))))
+    });
+  }
+
+  function renderInspecoes(d) {
+    const i = d.inspecoes;
+    const area1 = area('alto', 'Gráfico de colunas agrupadas: quantidade realizada e meta de inspeções TST por unidade');
+    grafico(area1.canvas, chartInspecoes(i));
+    return bloco({
+      id: 'inspecoes',
+      kicker: 'Lâmina 3 - Inspeções mensais',
+      titulo: 'Inspeções mensais - TST',
+      sub: 'Quantidade realizada por unidade. Referência: ' + i.referencia + '.',
+      corpo: h('div', {},
+        h('div', { class: 'faixa-alerta' },
+          h('b', {}, 'Abaixo da meta (' + i.abaixo.length + '): '),
+          i.abaixo.length ? i.abaixo.join(', ') : 'nenhuma unidade'),
+        area1.caixa)
     });
   }
 
@@ -190,7 +301,7 @@
     grafico(area1.canvas, chartAderencia(a));
     return bloco({
       id: 'aderencia',
-      kicker: 'Lâmina 2 · Treinamentos obrigatórios',
+      kicker: 'Lâmina 2 - Treinamentos obrigatórios',
       titulo: 'Aderência de treinamentos obrigatórios',
       sub: 'Aderência por unidade (%). Referência: ' + a.referencia + '.',
       corpo: h('div', {},
@@ -222,8 +333,8 @@
     grafico(area1.canvas, chartVct(v));
     return bloco({
       id: 'vct',
-      kicker: 'Lâmina 3 · Verificação do ciclo do trabalho (VCT)',
-      titulo: 'VCT · Verificação do ciclo do trabalho',
+      kicker: 'Lâmina 4 - Verificação do ciclo do trabalho (VCT)',
+      titulo: 'VCT - Verificação do ciclo do trabalho',
       sub: 'Quantidades realizadas por unidade. Referência: ' + v.referencia + '.',
       corpo: h('div', {},
         h('div', { class: 'grade-kpi' },
@@ -241,17 +352,49 @@
 
   function renderDesvios(d) {
     const dv = d.desvios;
-    const total = soma(dv.unidades.map((x) => x.valor));
-    const area1 = area('alto', 'Barras horizontais: número de desvios por gerência (unidade)');
-    grafico(area1.canvas, chartDesvios(dv.unidades));
+    const area1 = area('alto', 'Barras empilhadas: desvios resolvidos e pendentes por unidade');
+    grafico(area1.canvas, chartDesviosEmpilhado(dv.unidades));
     return bloco({
       id: 'desvios',
-      kicker: 'Lâmina 5 · Registros de desvios',
-      titulo: 'Nº de desvios por gerência e categoria',
-      sub: 'Dados referentes ao mês de ' + dv.referencia + '.',
+      kicker: 'Lâmina 6 - Registros de desvios',
+      titulo: 'Nº de desvios por gerência',
+      sub: 'Desvios registrados, resolvidos e pendentes por unidade. Referência: ' + dv.referencia + '.',
       corpo: h('div', {},
         h('div', { class: 'grade-kpi' },
-          kpi({ rotulo: 'Total de desvios no mês', valor: fmt(total), cor: 'vermelho' })),
+          kpi({ rotulo: 'Desvios registrados no mês', valor: fmt(dv.total), cor: 'vermelho' }),
+          kpi({ rotulo: 'Resolvidos', valor: fmt(dv.resolvidos) }),
+          kpi({ rotulo: 'Pendentes', valor: fmt(dv.pendentes), cor: 'vermelho' }),
+          kpi({ rotulo: 'Índice de resolução', valor: pct(dv.indice, 1), sub: 'resolvidos ÷ registrados' })),
+        area1.caixa)
+    });
+  }
+
+  function renderIndicadores(d) {
+    const dv = d.desvios;
+    const ad = d.aderencia;
+    const mediaAd = media(ad.unidades.map((u) => u.valor));
+    const i = d.inspecoes;
+    const planejadoVct = soma(d.vct.unidades.map((u) => u.planejado));
+    const realVct = soma(d.vct.unidades.map((u) => u.tecnicos + u.liderança));
+    const linhas = [
+      ['Resolução de desvios (resolvidos ÷ registrados)', '%', 'não consta na planilha', dv.referencia, pct(dv.indice, 1)],
+      ['Aderência de treinamentos obrigatórios (média)', '%', pct(ad.meta, 0), ad.referencia, pct(mediaAd, 2)]
+    ];
+    if (i) linhas.push(['Inspeções TST: unidades abaixo da meta', 'UN', (i.meta !== null ? fmt(i.meta) + ' inspeções por unidade' : 'varia por unidade'), i.referencia, i.abaixo.length + ' de ' + i.unidades.length]);
+    linhas.push(['VCT: quantidade realizada (técnicos + liderança)', 'QTD', 'planejado: ' + fmt(planejadoVct), d.vct.referencia, fmt(realVct)]);
+    const area1 = area('baixo', 'Gráfico de colunas: resolução mensal de desvios em porcentagem');
+    grafico(area1.canvas, chartResolucao(dv.serie));
+    return bloco({
+      id: 'indicadores',
+      kicker: 'Lâmina 7 - Indicadores de desvios e planos de ação',
+      titulo: 'Indicadores de desvios e planos de ação',
+      sub: 'Valores registrados na planilha, com a referência de cada indicador.',
+      corpo: h('div', {},
+        h('div', { class: 'tabela-wrap' }, h('table', { class: 'tabela' },
+          h('thead', {}, h('tr', {}, ['Indicador', 'UN', 'Meta (planilha)', 'Referência', 'Resultado'].map((c) => h('th', {}, c)))),
+          h('tbody', {}, linhas.map((r) => h('tr', {}, r.map((v) => h('td', {}, v)))))
+        )),
+        h('p', { class: 'legenda-manual', style: 'margin-top:22px' }, 'Resolução mensal de desvios (resolvidos ÷ registrados)'),
         area1.caixa)
     });
   }
@@ -267,16 +410,18 @@
       const a = area('alto', p.titulo); grafico(a.canvas, chartDesvios(p.itens));
       corpo = h('div', {}, a.caixa, corpo);
     }
-    return bloco({ id: p.id, kicker: 'Lâmina ' + p.numero, titulo: p.titulo, sub: p.referencia, corpo });
+    return bloco({ id: p.id, kicker: 'Lâmina ' + p.numero + ' - Resultados das auditorias', titulo: p.titulo, sub: p.referencia, corpo });
   }
 
   // ---------- montagem ----------
   const SECOES_NAV = [
     ['pauta', 'Pauta'],
     ['aderencia', 'Treinamentos'],
+    ['inspecoes', 'Inspeções TST'],
     ['vct', 'VCT'],
     ['auditorias', 'Auditorias VCT'],
-    ['desvios', 'Desvios']
+    ['desvios', 'Desvios'],
+    ['indicadores', 'Indicadores']
   ];
 
   function renderNav() {
@@ -292,9 +437,11 @@
     document.getElementById('conteudo').replaceChildren(
       renderPauta(d),
       renderAderencia(d),
+      ...(d.inspecoes ? [renderInspecoes(d)] : []),
       renderVct(d),
       ...(d.auditorias.linhas.length ? [renderComplemento(d.auditorias)] : []),
-      renderDesvios(d)
+      renderDesvios(d),
+      renderIndicadores(d)
     );
     renderNav();
     desenharGraficos();
@@ -384,6 +531,7 @@
   const norm = (s) => String(s == null ? '' : s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/\s+/g, ' ').trim();
   const nomeLimpo = (s) => String(s == null ? '' : s).replace(/\s+/g, ' ').trim();
   const mesIdx = (v) => MESES.findIndex((m) => norm(v).startsWith(m));
+  const arred1 = (x) => Math.round(x * 10) / 10;
   const arred2 = (x) => Math.round(x * 100) / 100;
   function numero(v) {
     if (typeof v === 'number') return Number.isFinite(v) ? v : null;
@@ -471,18 +619,70 @@
     if (!Number.isFinite(mesDesv)) throw new Error('nenhum registro de desvios preenchido');
     const anoDesv = String(linhasDesv[0][2]).trim();
     const colMesDesv = colsMesDesv.find((c) => c.mes === mesDesv).col;
+    const resolvDesv = (u) => linhasDesv.find((r) => nomeLimpo(r[0]) === u && norm(r[1]) === 'resolvidos');
+    const pendDesv = (u) => linhasDesv.find((r) => nomeLimpo(r[0]) === u && norm(r[1]) === 'pendentes');
+    const unidadesDesv = linhasDesvios.filter(r => numero(r[colMesDesv]) !== null).map((r) => {
+      const nome = nomeLimpo(r[0]);
+      const resolvidos = numero(resolvDesv(nome) && resolvDesv(nome)[colMesDesv]);
+      const pendentes = numero(pendDesv(nome) && pendDesv(nome)[colMesDesv]);
+      return {
+        nome: nome,
+        valor: numero(r[colMesDesv]),
+        resolvidos: exigir(resolvidos, nome + ' / desvios resolvidos'),
+        pendentes: exigir(pendentes, nome + ' / desvios pendentes')
+      };
+    });
+    const totalDesv = soma(unidadesDesv.map((u) => u.valor));
+    const resolvidosDesv = soma(unidadesDesv.map((u) => u.resolvidos));
+    // Série mensal até o mês de referência: resolvidos / registrados (conclusão dos planos de ação)
+    const serieDesv = colsMesDesv.filter((c) => c.mes <= mesDesv).map((c) => {
+      const registrados = linhasDesvios.map((r) => numero(r[c.col])).filter((v) => v !== null);
+      const resolvidos = linhasDesv.filter((r) => norm(r[1]) === 'resolvidos').map((r) => numero(r[c.col])).filter((v) => v !== null);
+      if (!registrados.length) return null;
+      const total = soma(registrados);
+      const res = soma(resolvidos);
+      return { mes: MESES_NOME[c.mes].slice(0, 3), desvios: total, resolvidos: res, conclusao: total ? arred1(res / total * 100) : 0 };
+    }).filter(Boolean);
     const desvios = {
       referencia: MESES_NOME[mesDesv] + ' ' + anoDesv,
-      unidades: linhasDesvios.filter(r => numero(r[colMesDesv]) !== null).map((r) => ({ nome: nomeLimpo(r[0]), valor: numero(r[colMesDesv]) }))
+      unidades: unidadesDesv,
+      total: totalDesv,
+      resolvidos: resolvidosDesv,
+      pendentes: totalDesv - resolvidosDesv,
+      indice: totalDesv ? arred1(resolvidosDesv / totalDesv * 100) : 0,
+      serie: serieDesv
     };
 
+    // Inspeções Mensais de Segurança (TST): Meta (QTD) e Executado (QTD) por unidade; mês = último com execução lançada
+    const ins = abaDe(wb, 'inspecoes').slice(1).filter((r) => r && nomeLimpo(r[2]) && numero(r[4]) !== null);
+    let inspecoes = null;
+    if (ins.length) {
+      const chaveIns = (r) => Number(r[0]) * 12 + mesIdx(r[1]);
+      const ultimaChave = Math.max(...ins.map(chaveIns));
+      const doMes = ins.filter((r) => chaveIns(r) === ultimaChave);
+      const unidadesIns = doMes.map((r) => ({
+        nome: nomeLimpo(r[2]),
+        meta: exigir(numero(r[3]), nomeLimpo(r[2]) + ' / meta de inspeções'),
+        realizado: numero(r[4])
+      }));
+      const metasIns = [...new Set(unidadesIns.map((u) => u.meta))];
+      inspecoes = {
+        referencia: MESES_NOME[mesIdx(doMes[0][1])] + ' ' + doMes[0][0],
+        meta: metasIns.length === 1 ? metasIns[0] : null,
+        unidades: unidadesIns,
+        abaixo: unidadesIns.filter((u) => u.realizado < u.meta).map((u) => u.nome)
+      };
+    }
+
     const auditorias = {
-      id: 'auditorias', numero: 4, titulo: 'VCT · Resultados das auditorias', referencia: vct.referencia,
-      colunas: ['Unidade de serviço', 'Itens em não conformidade', 'Resultado médio (%)'],
+      id: 'auditorias', numero: 5, titulo: 'VCT - Resultados das auditorias', referencia: vct.referencia,
+      colunas: ['Unidade de serviço', 'Itens em não conformidade', 'Resultado médio (%)', 'Quantidade Realizada'],
       linhas: unidadesVct.map(u => {
         const nc = achar(u, 'itens em nao conformidade');
+        const tec = valorVct(achar(u, 'tecnico'));
+        const lid = valorVct(achar(u, 'lideranca'));
         const resultado = linhasVct.find(r => nomeLimpo(r[1]) === u && /^(resultado|resultato) medio/.test(norm(r[2])));
-        return [u, valorVct(nc), valorVct(resultado) === null ? null : pct(valorVct(resultado) * 100, 2)];
+        return [u, valorVct(nc), valorVct(resultado) === null ? null : pct(valorVct(resultado) * 100, 2), tec === null || lid === null ? null : tec + lid];
       }),
       nota: 'Valores registrados na aba VCT. A planilha não informa procedimentos auditados, número de auditorias conformes ou meta de conformidade; esses indicadores não são estimados.'
     };
@@ -497,6 +697,7 @@
       auditorias,
       pauta: pauta,
       aderencia: aderencia,
+      inspecoes: inspecoes,
       vct: vct,
       desvios: desvios
     };

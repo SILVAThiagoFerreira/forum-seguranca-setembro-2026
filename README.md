@@ -20,10 +20,14 @@ Publicado pela branch `main`, pasta `/docs`.
 A página e o PowerPoint mostram apenas lâminas com dados reais da planilha:
 1. Pauta (aba Pauta).
 2. Aderência de treinamentos (aba Aderência de Treinamentos).
-3. Quantidades de VCT (aba VCT).
-4. Resultados de auditorias VCT (aba VCT), somente quando houver unidades registradas.
-5. Desvios por gerência: valores por unidade da aba Gestão de Desvios.
+3. Inspeções mensais TST (aba Inspeções Mensais de Segurança; mês de referência = último com execução lançada).
+4. Quantidades de VCT (aba VCT).
+5. Resultados de auditorias VCT (aba VCT), com a quantidade realizada (técnicos + liderança) do mês; somente quando houver unidades registradas.
+6. Nº de desvios por gerência (aba Gestão de Desvios: registrados, resolvidos e pendentes por unidade).
+7. Indicadores de desvios e planos de ação (aba Gestão de Desvios e aba Aderência de Treinamentos). Índice de resolução = resolvidos ÷ registrados.
+
+Não são exibidas por falta de dados na planilha: classificação GUT (não há aba GUT), parâmetros Gate/Appropriated/Exceeded (não há aba de parâmetros), cronograma de apresentações (não há aba) e Kaizens acumulados (a aba Kaizen existe, mas a coluna "Kaizens Realizados (QTD)" está vazia).
 
 O PDF define os temas e a sequência, nunca os valores. Não há fallback para planilha local, dados de exemplo ou números do PDF. Cada indicador exibe sua própria referência. Células vazias não são convertidas em zero; zeros explicitamente registrados são preservados. VCT exige quantidades e metas preenchidas para evitar totais parciais. A exportação fica desabilitada até a leitura da fonte concluir.
 
-A fonte atual não permite reconstruir a tabela por procedimento auditado, categorias de desvios, classificações GUT ou metas OKR; por isso essas lâminas não são exibidas.
+A fonte atual não permite reconstruir a tabela por procedimento auditado, categorias de desvios ou metas OKR; por isso essas lâminas não são exibidas.

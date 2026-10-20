@@ -162,8 +162,14 @@ table.tabela td.centro, table.tabela th.centro { text-align: center; }
 .lista-eventos li { margin-bottom: 4px; }
 
 /* ---------- pauta ---------- */
-.pauta { margin: 0; padding-left: 22px; columns: 2; column-gap: 40px; font-size: 12.5px; }
-.pauta li { margin-bottom: 8px; break-inside: avoid; }
+.pauta-duas { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+.pauta { margin: 0; padding-left: 26px; font-size: 14px; }
+.pauta li { margin-bottom: 14px; break-inside: avoid; }
+.pauta li::marker { color: var(--red-dk); font-weight: 700; }
+
+/* ---------- faixa de alerta (abaixo da meta) ---------- */
+.faixa-alerta { margin: 0 0 16px; padding: 12px 16px; background: #f3f4f6; border-left: 4px solid var(--red-dk); color: var(--red-dk); font-size: 12px; }
+.faixa-alerta b { font-weight: 700; }
 
 /* ---------- calendário Cruz Verde ---------- */
 .calendario { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; max-width: 420px; }
@@ -213,7 +219,7 @@ table.tabela td.centro, table.tabela th.centro { text-align: center; }
 /* ---------- responsivo ---------- */
 @media (max-width: 960px) {
   .grade-2 { grid-template-columns: 1fr; }
-  .pauta { columns: 1; }
+  .pauta-duas { grid-template-columns: 1fr; gap: 0; }
   .topo h1 { font-size: 22px; }
   .topo-sub { display: none; }
 }
