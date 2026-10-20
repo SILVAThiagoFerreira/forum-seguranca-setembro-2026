@@ -115,6 +115,205 @@
     }
   }
 
+  // ---------- ícones das lâminas (PNG gerado em canvas: serve ao PowerPoint, ao PDF e à prévia) ----------
+  var iconesCache = {};
+  function icone(tipo, cor) {
+    cor = String(cor).replace('#', ''); // aceita "B5121B" (lâminas) ou "#b5121b" (prévia)
+    var chave = tipo + '-' + cor;
+    if (iconesCache[chave]) return iconesCache[chave];
+    var cv = document.createElement('canvas');
+    cv.width = 256; cv.height = 256;
+    var g = cv.getContext('2d');
+    var c = '#' + cor, branco = '#FFFFFF';
+    g.lineCap = 'round'; g.lineJoin = 'round';
+    function disco(cor2) { g.fillStyle = cor2; g.beginPath(); g.arc(128, 128, 128, 0, Math.PI * 2); g.fill(); }
+    if (tipo === 'calendario') {
+      disco(c);
+      g.strokeStyle = branco; g.fillStyle = branco; g.lineWidth = 14;
+      g.strokeRect(64, 84, 128, 108);
+      g.beginPath(); g.moveTo(64, 120); g.lineTo(192, 120); g.stroke();
+      g.beginPath(); g.moveTo(96, 62); g.lineTo(96, 96); g.moveTo(160, 62); g.lineTo(160, 96); g.stroke();
+      [[96, 150], [128, 150], [160, 150], [96, 174], [128, 174], [160, 174]].forEach(function (p) {
+        g.beginPath(); g.arc(p[0], p[1], 8, 0, Math.PI * 2); g.fill();
+      });
+    } else if (tipo === 'check') {
+      g.strokeStyle = c; g.lineWidth = 34;
+      g.beginPath(); g.moveTo(36, 134); g.lineTo(100, 196); g.lineTo(222, 66); g.stroke();
+    } else if (tipo === 'proibido') {
+      g.strokeStyle = c; g.lineWidth = 26;
+      g.beginPath(); g.arc(128, 128, 102, 0, Math.PI * 2); g.stroke();
+      g.beginPath(); g.moveTo(62, 194); g.lineTo(194, 62); g.stroke();
+    } else if (tipo === 'seta') {
+      disco(c);
+      g.strokeStyle = branco; g.lineWidth = 26;
+      g.beginPath(); g.moveTo(128, 190); g.lineTo(128, 72); g.stroke();
+      g.beginPath(); g.moveTo(82, 118); g.lineTo(128, 72); g.lineTo(174, 118); g.stroke();
+    }
+    var url = cv.toDataURL('image/png');
+    iconesCache[chave] = url;
+    return url;
+  }
+
+  // Classes da GUT (como na referência): Baixa = GUT 3 a 6; Média = 7 a 11; Alta = 12 a 15
+  function classeGut(n) { return n <= 6 ? 'baixa' : (n <= 11 ? 'media' : 'alta'); }
+
+  // Gráfico de barras. Séries com linha: true viram linha de meta (barra + linha no PowerPoint).
+  function addGrafico(s, ctx, series, o) {
+    var linhas = series.filter(function (x) { return x.linha; });
+    if (ctx.palco || !linhas.length) return s.addChart('bar', series, o);
+    var barras = series.filter(function (x) { return !x.linha; });
+    var pura = function (lista) { return lista.map(function (x) { return { name: x.name, labels: x.labels, values: x.values }; }); };
+    return s.addChart([
+      { type: 'bar', data: pura(barras), options: { chartColors: barras.map(function (x) { return x.cor; }) } },
+      { type: 'line', data: pura(linhas), options: { chartColors: linhas.map(function (x) { return x.cor; }), lineSize: 2, lineDataSymbol: 'none', showValue: false } }
+    ], o);
+  }
+
+  // Nº desvios por GUT: cartões, classes, gráfico por GUT, não conformes e tabela por categoria
+  function laminaGut(pptx, ctx, d) {
+    var g = d.gut;
+    var s = lamina(pptx, ctx, { titulo: "Nº desvios por GUT - resultados das auditorias - 08/2026",
+      sub: 'Dados referentes ao mês de ' + g.periodo + '.' });
+    var cards = [
+      { rotulo: 'Conformes', valor: String(g.conformes.valor), sub: g.conformes.pct, cor: C.ardosia },
+      { rotulo: 'Não conformes', valor: String(g.naoConformes.valor), sub: g.naoConformes.pct, cor: C.vermelho },
+      { rotulo: "Total de GUT's", valor: String(g.totalGut.valor), sub: g.totalGut.pct, cor: C.ardosia },
+      { rotulo: 'Índice de conformidade', valor: g.indiceConformidade, sub: '', cor: C.ardosia }
+    ];
+    var cw = (W - 0.6) / 4;
+    cards.forEach(function (c, i) {
+      var x = X0 + i * (cw + 0.2), y = 1.72, hh = 1.0;
+      s.addShape('rect', { x: x, y: y, w: cw, h: hh, fill: { color: 'F3F4F6' }, line: { type: 'none' } });
+      s.addShape('rect', { x: x, y: y, w: 0.06, h: hh, fill: { color: c.cor }, line: { type: 'none' } });
+      texto(s, c.rotulo, x + 0.22, y + 0.12, cw - 0.3, 0.25, { fontSize: T.indicadorRotulo });
+      texto(s, c.valor, x + 0.22, y + 0.36, cw - 0.3, 0.4, { fontSize: T.indicadorValor, bold: true, color: c.cor });
+      if (c.sub) texto(s, c.sub, x + 0.22, y + 0.74, cw - 0.3, 0.22, { fontSize: T.indicadorSub, color: C.medio });
+    });
+
+    var py = 2.95, wEsq = 5.0, xMeio = X0 + wEsq + 0.25, wMeio = 3.5, xDir = xMeio + wMeio + 0.25, wDir = X0 + W - xDir;
+    var baseG = py + 1.2;
+    texto(s, 'Nº desvios por GUT', X0, py, wEsq, 0.3, { fontSize: T.secao, color: C.texto });
+    var classes = [['Baixa', g.classes.baixa, C.ardosia], ['Média', g.classes.media, C.cinza], ['Alta', g.classes.alta, C.vermelho]];
+    var cwc = wEsq / 3;
+    classes.forEach(function (c, i) {
+      texto(s, String(c[1]), X0 + i * cwc, py + 0.36, cwc - 0.1, 0.4, { fontSize: T.indicadorValor - 4, bold: true, color: c[2] });
+      texto(s, c[0], X0 + i * cwc, py + 0.78, cwc - 0.1, 0.25, { fontSize: T.rotulo, color: C.texto });
+    });
+    var guts = g.porGut.map(function (x) { return String(x.gut); });
+    var porClasse = function (cl) { return g.porGut.map(function (x) { return classeGut(x.gut) === cl ? x.valor : 0; }); };
+    addGrafico(s, ctx, [
+      { name: 'Baixa', labels: guts, values: porClasse('baixa'), cor: C.ardosia },
+      { name: 'Média', labels: guts, values: porClasse('media'), cor: C.cinza },
+      { name: 'Alta', labels: guts, values: porClasse('alta'), cor: C.vermelho }
+    ], opcChart({ x: X0, y: baseG, w: wEsq, h: 7.85 - baseG, chartColors: [C.ardosia, C.cinza, C.vermelho], showLegend: false,
+      dataLabelFormatCode: '0;-0;;', dataLabelPosition: 'outEnd', dataLabelFontSize: 9, catAxisLabelFontSize: 9, barGapWidthPct: 35 }));
+
+    texto(s, 'Não conformes por GUT', xMeio, py, wMeio, 0.3, { fontSize: T.secao, color: C.texto });
+    addGrafico(s, ctx, [{ name: 'Não conformes', labels: g.naoConformesPorGut.map(function (x) { return String(x.gut); }),
+      values: g.naoConformesPorGut.map(function (x) { return x.valor; }), cor: C.vermelho }],
+      opcChart({ x: xMeio, y: py + 0.5, w: wMeio, h: 7.85 - (py + 0.5), chartColors: [C.vermelho], showLegend: false,
+        dataLabelFormatCode: '0', dataLabelPosition: 'outEnd', valAxisMinVal: 0, valAxisMaxVal: 6, barGapWidthPct: 50, catAxisLabelFontSize: 9 }));
+
+    var cat = g.categoria, maxU = Math.max.apply(null, cat.unidades.map(function (u) { return u.valor; }));
+    texto(s, 'Nº desvios por categoria', xDir, py, wDir, 0.3, { fontSize: T.secao, color: C.texto });
+    var ty = py + 0.4;
+    s.addShape('rect', { x: xDir, y: ty, w: wDir, h: 0.36, fill: { color: 'F3F4F6' }, line: { type: 'none' } });
+    texto(s, 'Gerência', xDir + 0.12, ty + 0.09, 2.0, 0.22, { fontSize: T.tabela, bold: true, color: C.texto });
+    texto(s, 'Desvios', xDir + wDir - 1.0, ty + 0.09, 0.88, 0.22, { fontSize: T.tabela, bold: true, color: C.texto, align: 'right' });
+    ty += 0.36;
+    s.addShape('rect', { x: xDir, y: ty, w: wDir, h: 0.56, fill: { color: 'EDEFF2' }, line: { type: 'none' } });
+    texto(s, cat.gerencia, xDir + 0.12, ty + 0.12, wDir - 1.1, 0.42, { fontSize: 9, bold: true, color: C.escuro });
+    texto(s, String(cat.total), xDir + wDir - 0.9, ty + 0.14, 0.78, 0.25, { fontSize: 10, bold: true, color: C.escuro, align: 'right' });
+    ty += 0.56;
+    cat.unidades.forEach(function (u) {
+      texto(s, u.nome, xDir + 0.12, ty + 0.16, 1.95, 0.25, { fontSize: 9, color: C.texto });
+      s.addShape('rect', { x: xDir + 2.1, y: ty + 0.2, w: 0.75, h: 0.1, fill: { color: 'E5E7EB' }, line: { type: 'none' } });
+      s.addShape('rect', { x: xDir + 2.1, y: ty + 0.2, w: 0.75 * u.valor / maxU, h: 0.1, fill: { color: C.ardosia }, line: { type: 'none' } });
+      texto(s, String(u.valor), xDir + wDir - 0.45, ty + 0.14, 0.33, 0.25, { fontSize: 10, color: C.escuro, align: 'right' });
+      s.addShape('rect', { x: xDir, y: ty + 0.49, w: wDir, h: 0.01, fill: { color: 'E5E7EB' }, line: { type: 'none' } });
+      ty += 0.5;
+    });
+    s.addShape('rect', { x: xDir, y: ty, w: wDir, h: 0.42, fill: { color: 'EDEFF2' }, line: { type: 'none' } });
+    texto(s, 'Total', xDir + 0.12, ty + 0.1, 1.5, 0.25, { fontSize: 10, bold: true, color: C.escuro });
+    texto(s, String(cat.total), xDir + wDir - 0.9, ty + 0.1, 0.78, 0.25, { fontSize: 10, bold: true, color: C.escuro, align: 'right' });
+    return s;
+  }
+
+  // OKR 2026: tabela de metas (Gate, Appropriated, Exceeded) e barras mensais com linha de meta
+  function laminaOkr(pptx, ctx, d) {
+    var k = d.okr;
+    var s = lamina(pptx, ctx, { titulo: 'OKR 2026 - promover a segurança', sub: 'Gerência Mineração - Underground/Nordeste' });
+    var colunas = [
+      { t: 'KPI', w: 5.333 }, { t: 'UN', w: 1.2 }, { t: 'Gate', w: 1.9 }, { t: 'Appropriated', w: 2.0 }, { t: 'Exceeded', w: 2.0 }
+    ];
+    var xs = [], acc = X0;
+    colunas.forEach(function (c) { xs.push(acc); acc += c.w; });
+    var y0 = 1.72, cabH = 0.42, corpoH = 0.86, yb = y0 + cabH;
+    s.addShape('rect', { x: X0, y: y0, w: W, h: cabH, fill: { color: C.ardosia }, line: { type: 'none' } });
+    colunas.forEach(function (c, i) {
+      texto(s, c.t, xs[i] + 0.1, y0 + 0.1, c.w - 0.2, 0.25, { fontSize: 12, bold: true, color: C.branco, align: 'center' });
+    });
+    s.addShape('rect', { x: X0, y: yb, w: W, h: corpoH, fill: { color: 'F3F4F6' }, line: { type: 'none' } });
+    texto(s, [
+      { text: k.kpi, options: { color: C.escuro, breakLine: true } },
+      { text: k.kpiDetalhe, options: { color: C.vermelho } }
+    ], xs[0] + 0.1, yb + 0.16, colunas[0].w - 0.2, 0.6, { fontSize: 12, align: 'center' });
+    [k.un, k.gate + '%', k.appropriated + '%', k.exceeded + '%'].forEach(function (v, i) {
+      texto(s, v, xs[i + 1] + 0.1, yb + 0.3, colunas[i + 1].w - 0.2, 0.3, { fontSize: 14, align: 'center', color: C.escuro });
+    });
+
+    texto(s, 'Conclusão mensal dos planos de ação (%):', X0, 3.25, W, 0.3, { fontSize: T.secao, color: C.texto });
+    var meses = k.serie.map(function (m) { return m.mes; });
+    addGrafico(s, ctx, [
+      { name: 'Conclusão mensal (%)', labels: meses, values: k.serie.map(function (m) { return m.valor; }), cor: C.ardosia },
+      { name: 'Appropriated (' + k.appropriated + '%)', labels: meses, values: meses.map(function () { return k.appropriated; }), linha: true, cor: C.vermelho }
+    ], opcChart({ x: X0, y: 3.6, w: W, h: 4.25, chartColors: [C.ardosia], showLegend: true, legendPos: 'b',
+      valAxisMinVal: 0, valAxisMaxVal: 110, valAxisLabelFormatCode: '0"%"', dataLabelFormatCode: '0"%"',
+      dataLabelPosition: 'outEnd', barGapWidthPct: 60 }));
+    return s;
+  }
+
+  // Cronograma de apresentação: duas colunas de linhas com ícone de calendário e status
+  function laminaCronograma(pptx, ctx, d) {
+    var s = lamina(pptx, ctx, { titulo: 'Cronograma - apresentação', sub: 'Fórum de Segurança Enaex 2026' });
+    var itens = d.cronograma;
+    var metade = Math.floor(itens.length / 2);
+    var colW = 6.1, pitch = 0.78, alt = 0.66;
+    [itens.slice(0, metade), itens.slice(metade)].forEach(function (col, c) {
+      var x = X0 + c * (colW + 0.233);
+      col.forEach(function (it, j) {
+        var y = 1.95 + j * pitch;
+        s.addShape('rect', { x: x, y: y, w: colW, h: alt, fill: { color: 'F3F4F6' }, line: { type: 'none' } });
+        s.addImage({ data: icone('calendario', C.vermelho), x: x + 0.1, y: y + 0.08, w: 0.5, h: 0.5 });
+        var partes = [{ text: it.mes + ' ' + it.ano, options: { bold: true, color: C.vermelho } }];
+        if (it.status === 'nao_houve') partes.push({ text: ' - Não houve fórum', options: { color: C.escuro } });
+        else partes.push({ text: ' - ' + [it.nome, it.unidade].filter(Boolean).join(' - '), options: { color: C.escuro } });
+        texto(s, partes, x + 0.75, y + 0.2, colW - 1.4, 0.3, { fontSize: 12 });
+        if (it.status === 'ok') s.addImage({ data: icone('check', C.ardosia), x: x + colW - 0.55, y: y + 0.13, w: 0.4, h: 0.4 });
+        if (it.status === 'nao_houve') s.addImage({ data: icone('proibido', C.cinza), x: x + colW - 0.55, y: y + 0.13, w: 0.4, h: 0.4 });
+      });
+    });
+    return s;
+  }
+
+  // Acumulados Kaizens: barras por unidade (decrescente) e caixa de evolução geral
+  function laminaKaizens(pptx, ctx, d) {
+    var kz = d.kaizens;
+    var s = lamina(pptx, ctx, { titulo: 'Acumulados Kaizens - outubro de 2024 a agosto de 2026', sub: 'Kaizens acumulados por unidade de serviço.' });
+    addGrafico(s, ctx, [{ name: 'Kaizens acumulados', labels: kz.unidades.map(function (u) { return u.nome; }),
+      values: kz.unidades.map(function (u) { return u.valor; }), cor: C.ardosia }],
+      opcChart({ x: X0, y: 1.75, w: W, h: 4.95, chartColors: [C.ardosia], showLegend: false, dataLabelPosition: 'outEnd',
+        dataLabelFormatCode: '0', valAxisMinVal: 0, valAxisMaxVal: 55, barGapWidthPct: 50, catAxisLabelFontSize: 9 }));
+    var bw = 6.2, bx = (PAG_W - bw) / 2, by = 6.85, bh = 0.92;
+    s.addShape('rect', { x: bx, y: by, w: bw, h: bh, fill: { color: 'F3F4F6' }, line: { type: 'none' } });
+    s.addImage({ data: icone('seta', C.ardosia), x: bx + 0.25, y: by + 0.18, w: 0.56, h: 0.56 });
+    texto(s, [{ text: 'Evolução geral: ', options: { bold: true, color: C.escuro } },
+      { text: num(kz.evolucao, 2) + '%', options: { bold: true, color: C.ardosia } }], bx + 1.0, by + 0.14, bw - 1.2, 0.36, { fontSize: 16 });
+    texto(s, 'Total anterior: ' + kz.anterior + ' Kaizens | Total atualizado: ' + kz.atualizado + ' Kaizens',
+      bx + 1.0, by + 0.52, bw - 1.2, 0.26, { fontSize: 10, color: C.texto });
+    return s;
+  }
+
   function construirApresentacao(d, opcoes) {
     opcoes = opcoes || {};
     var Ctor = opcoes.PptxGenJS || (typeof window !== 'undefined' ? window.PptxGenJS : null);
@@ -124,7 +323,7 @@
       pptx.defineLayout({ name: LAYOUT, width: PAG_W, height: PAG_H });
       pptx.layout = LAYOUT;
       pptx.title = d.meta.evento + ' - ' + d.meta.periodo;
-      var ctx = { logos: logos, slides: [] };
+      var ctx = { logos: logos, slides: [], palco: opcoes.PptxGenJS === PalcoPptx };
       var s;
 
       // 1. Pauta (traço vermelho, itens numerados em duas colunas e losango decorativo à direita)
@@ -222,46 +421,14 @@
 
       if (d.auditorias.linhas && d.auditorias.linhas.length) complemento(pptx, ctx, d.auditorias);
 
-      // 6. Desvios por gerência (unidade): resolvidos e pendentes do mês de referência
-      var dv = d.desvios;
-      s = lamina(pptx, ctx, { titulo: 'Nº de desvios por gerência', sub: 'Desvios registrados, resolvidos e pendentes por unidade. Referência: ' + dv.referencia + '.',
-        secao: 'Desvios por unidade (resolvidos e pendentes):' });
-      indicadores(s, 2.15, [
-        { valor: dv.total, rotulo: 'Desvios registrados no mês', cor: C.alerta },
-        { valor: dv.resolvidos, rotulo: 'Resolvidos' },
-        { valor: dv.pendentes, rotulo: 'Pendentes', cor: C.alerta },
-        { valor: num(dv.indice, 1) + '%', rotulo: 'Índice de resolução', sub: 'resolvidos ÷ registrados' }
-      ]);
-      var ordem = dv.unidades.slice().sort(function (a, b) { return a.valor - b.valor; });
-      s.addChart('bar',
-        [{ name: 'Resolvidos', labels: ordem.map(function (x) { return x.nome; }), values: ordem.map(function (x) { return x.resolvidos; }) },
-         { name: 'Pendentes', labels: ordem.map(function (x) { return x.nome; }), values: ordem.map(function (x) { return x.pendentes; }) }],
-        opcChart({ x: X0, y: 3.5, w: W, h: 4.35, barDir: 'bar', barGrouping: 'stacked', chartColors: [C.ardosia, C.alerta],
-          showLegend: true, legendPos: 'b', dataLabelFormatCode: '0;-0;;', dataLabelPosition: 'ctr', dataLabelColor: C.branco,
-          catAxisLabelFontSize: T.eixo, dataLabelFontSize: T.rotulo, barGapWidthPct: 40 }));
-
-      // 7. Indicadores de desvios e planos de ação (somente valores existentes na planilha)
-      var ind = [
-        ['Indicador', 'UN', 'Meta (planilha)', 'Referência', 'Resultado'],
-        ['Resolução de desvios (resolvidos ÷ registrados)', '%', 'não consta na planilha', dv.referencia, num(dv.indice, 1) + '%'],
-        ['Aderência de treinamentos obrigatórios (média)', '%', num(ad.meta, 0) + '%', ad.referencia, num(mediaAd, 2) + '%']
-      ];
-      if (d.inspecoes) {
-        ind.push(['Inspeções TST: unidades abaixo da meta', 'UN', d.inspecoes.meta !== null ? num(d.inspecoes.meta, 0) + ' inspeções por unidade' : 'varia por unidade',
-          d.inspecoes.referencia, d.inspecoes.abaixo.length + ' de ' + d.inspecoes.unidades.length]);
-      }
-      ind.push(['VCT: quantidade realizada (técnicos + liderança)', 'QTD', 'planejado: ' + num(tPlan, 0), vq.referencia, num(tReal, 0)]);
-      s = lamina(pptx, ctx, { titulo: 'Indicadores de desvios e planos de ação',
-        sub: 'Valores registrados na planilha, com a referência de cada indicador.' });
-      s.addTable(ind.map(function (r, i) {
-        return r.map(function (c) { return { text: c, options: { bold: i === 0, color: C.escuro, fontSize: T.tabela } }; });
-      }), { x: X0, y: 1.75, w: W, colW: [5.2, 0.9, 3.0, 2.2, 1.133], fontFace: FONT, margin: [0.03, 0.05, 0.03, 0.05],
-        border: { type: 'none' }, rowH: 0.36, autoPage: false });
-      texto(s, 'Resolução mensal de desvios (resolvidos ÷ registrados):', X0, 4.1, W, 0.3, { fontSize: T.secao, color: C.texto });
-      s.addChart('bar',
-        [{ name: 'Resolução (%)', labels: dv.serie.map(function (m) { return m.mes; }), values: dv.serie.map(function (m) { return m.conclusao; }) }],
-        opcChart({ x: X0, y: 4.45, w: W, h: 3.35, chartColors: [C.ardosia], dataLabelFormatCode: '0.0"%"', dataLabelPosition: 'outEnd',
-          valAxisMinVal: 0, valAxisMaxVal: 110, barGapWidthPct: 60 }));
+      // 6. Nº desvios por GUT (substitui "Nº de desvios por gerência")
+      laminaGut(pptx, ctx, d);
+      // 7. OKR 2026 (substitui "Indicadores de desvios e planos de ação")
+      laminaOkr(pptx, ctx, d);
+      // 8. Cronograma de apresentação
+      laminaCronograma(pptx, ctx, d);
+      // 9. Acumulados Kaizens
+      laminaKaizens(pptx, ctx, d);
 
       // Logo Enaex no canto superior direito de todas as lâminas
       ctx.slides.forEach(function (slide) {
@@ -459,6 +626,14 @@
     var labels = series[0].labels.map(quebrarRotulo);
 
     var datasets = series.map(function (s, i) {
+      if (s.linha) {
+        // Linha de meta (combinação barra + linha, como no PowerPoint)
+        return {
+          type: 'line', label: s.name, data: s.values, borderColor: '#' + (s.cor || C.escuro),
+          backgroundColor: '#' + (s.cor || C.escuro), borderWidth: 2, pointRadius: 0, fill: false,
+          order: 1, datalabels: { display: false }
+        };
+      }
       return {
         label: s.name,
         data: s.values,
@@ -584,4 +759,5 @@
   alvo.construirApresentacao = construirApresentacao;
   alvo.baixarApresentacao = baixarApresentacao;
   alvo.baixarPdf = baixarPdf;
+  alvo.iconeLamina = icone;
 })();

@@ -247,3 +247,33 @@ table.tabela td.centro, table.tabela th.centro { text-align: center; }
   .grafico { overflow-x: auto; overflow-y: hidden; }
   .grafico-plot { width: 850px; }
 }
+
+/* ---------- lâminas de referência: GUT, OKR, cronograma e Kaizens ---------- */
+.grade-3 { display: grid; grid-template-columns: 5fr 3.5fr 3.4fr; gap: 24px; align-items: start; }
+.grade-3 > * { min-width: 0; }
+.sub-bloco { margin: 0 0 8px; font-size: 13px; font-weight: 400; color: var(--text); }
+.classes-gut { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 8px; }
+.classes-gut div b { display: block; font-size: 22px; font-weight: 700; line-height: 1.1; }
+.classes-gut div span { font-size: 11px; color: var(--text); }
+.classes-gut .baixa b { color: var(--ink); }
+.classes-gut .media b { color: var(--cinza); }
+.classes-gut .alta b { color: var(--red-dk); }
+table.tabela tr.grupo td { background: #edeff2; font-weight: 700; }
+.mini { height: 8px; width: 90px; background: #e5e7eb; }
+.mini i { display: block; height: 100%; background: var(--ink); }
+table.tabela-okr th { background: var(--ink); color: #fff; font-size: 12px; }
+table.tabela-okr td { font-size: 14px; background: #f3f4f6; }
+table.tabela-okr td.centro, table.tabela-okr th.centro { text-align: center; }
+.kpi-detalhe { color: var(--red-dk); font-size: 12px; margin-top: 4px; }
+.cron-duas { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 24px; }
+.cron-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.cron-item { display: flex; align-items: center; gap: 14px; padding: 10px 14px; background: #f3f4f6; min-height: 62px; }
+.cron-cal, .cron-status { width: 40px; height: 40px; flex: none; }
+.cron-texto { flex: 1; font-size: 13px; }
+.cron-texto b { color: var(--red-dk); font-weight: 700; }
+.caixa-evolucao { display: flex; align-items: center; gap: 16px; width: fit-content; margin: 18px auto 0; padding: 14px 24px; background: #f3f4f6; }
+.caixa-evolucao img { width: 46px; height: 46px; }
+.evolucao-linha { font-size: 16px; }
+.evolucao-linha b { font-weight: 700; color: var(--ink); }
+.evolucao-sub { font-size: 11px; color: var(--text); }
+@media (max-width: 960px) { .grade-3, .cron-duas { grid-template-columns: 1fr; } }
