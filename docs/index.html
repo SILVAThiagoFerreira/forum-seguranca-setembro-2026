@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="icon" href="assets/enaex-simbolo.png">
-  <link rel="stylesheet" href="styles.css?v=20261020">
+  <link rel="stylesheet" href="styles.css?v=20261020-pdf-2">
 </head>
 <body>
   <header class="topo">
@@ -19,9 +19,14 @@
     </div>
     <h1>34º Fórum de Segurança <span class="topo-sub">· Outubro 2026</span></h1>
     <span class="topo-unit">NORDESTE / UNDERGROUND</span>
-    <button type="button" id="btn-pptx" class="btn-pptx" disabled>
-      <span aria-hidden="true">⬇</span> Baixar PowerPoint
-    </button>
+    <div class="acoes">
+      <button type="button" id="btn-pptx" class="btn-export btn-pptx" disabled>
+        <span aria-hidden="true">⬇</span> Baixar PowerPoint
+      </button>
+      <button type="button" id="btn-pdf" class="btn-export btn-pdf" disabled>
+        <span aria-hidden="true">⬇</span> Baixar PDF
+      </button>
+    </div>
   </header>
 
   <nav class="faixa-nav" id="faixa-nav" aria-label="Seções do dashboard"></nav>
@@ -31,14 +36,13 @@
   </main>
 
   <footer class="rodape">
-    <span class="aviso" id="aviso-dados"></span>
     <span class="confidencial">STRICTLY PRIVATE AND CONFIDENTIAL</span>
   </footer>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-  <script src="export.js?v=20261020-clean-export-6"></script>
-  <script src="app.js?v=20261020-6"></script>
+  <script src="export.js?v=20261020-pdf-2"></script>
+  <script src="app.js?v=20261020-pdf-2"></script>
 </body>
 </html>

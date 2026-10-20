@@ -87,7 +87,7 @@
             maxBarThickness: 56,
             datalabels: {
               display: true, anchor: 'end', align: 'end', offset: 2,
-              color: COR.ardosia, font: { weight: '700', size: 11 },
+              color: COR.ardosia, font: { weight: '700', size: 10 },
               formatter: (v) => pct(v, 2)
             }
           },
@@ -108,7 +108,7 @@
         plugins: { legend: { display: false } },
         scales: {
           y: { min: 0, max: 110, ticks: { stepSize: 20, callback: (v) => v + '%' }, grid: { color: COR.grade } },
-          x: { grid: { display: false }, ticks: { autoSkip: false, maxRotation: 30, font: { size: 11 } } }
+          x: { grid: { display: false }, ticks: { autoSkip: false, maxRotation: 30, font: { size: 10 } } }
         }
       })
     };
@@ -130,14 +130,14 @@
         datasets: series.map((s) => Object.assign({}, s, {
           borderRadius: 2,
           maxBarThickness: 26,
-          datalabels: { display: true, anchor: 'end', align: 'end', offset: 1, color: COR.ardosia, font: { size: 10, weight: '700' }, formatter: (x) => x }
+          datalabels: { display: true, anchor: 'end', align: 'end', offset: 1, color: COR.ardosia, font: { size: 9, weight: '700' }, formatter: (x) => x }
         }))
       },
       options: configBase({
         plugins: { legend: { position: 'bottom' } },
         scales: {
           y: { beginAtZero: true, suggestedMax: maximo + 1, ticks: { stepSize: 1 }, grid: { color: COR.grade } },
-          x: { grid: { display: false }, ticks: { autoSkip: false, maxRotation: 30, font: { size: 11 } } }
+          x: { grid: { display: false }, ticks: { autoSkip: false, maxRotation: 30, font: { size: 10 } } }
         }
       })
     };
@@ -155,7 +155,7 @@
           backgroundColor: COR.ardosia,
           borderRadius: 2,
           maxBarThickness: 22,
-          datalabels: { display: true, anchor: 'end', align: 'right', offset: 4, color: COR.ardosia, font: { weight: '700', size: 11 }, formatter: (x) => fmt(x) }
+          datalabels: { display: true, anchor: 'end', align: 'right', offset: 4, color: COR.ardosia, font: { weight: '700', size: 10 }, formatter: (x) => fmt(x) }
         }]
       },
       options: configBase({
@@ -163,7 +163,7 @@
         plugins: { legend: { display: false } },
         scales: {
           x: { beginAtZero: true, suggestedMax: maximo * 1.15 || 1, grid: { color: COR.grade } },
-          y: { grid: { display: false }, ticks: { autoSkip: false, font: { size: 11 } } }
+          y: { grid: { display: false }, ticks: { autoSkip: false, font: { size: 10 } } }
         }
       })
     };
@@ -289,7 +289,6 @@
     document.title = d.meta.evento + ' · ' + d.meta.periodo;
     const topoSub = document.querySelector('.topo-sub');
     if (topoSub) topoSub.textContent = '· ' + d.meta.periodo;
-    document.getElementById('aviso-dados').textContent = d.meta.aviso;
     document.getElementById('conteudo').replaceChildren(
       renderPauta(d),
       renderAderencia(d),
@@ -332,25 +331,43 @@
     return pptxCarregando;
   }
 
-  function ligarBotaoPptx(dados) {
-    const btn = document.getElementById('btn-pptx');
-    btn.disabled = false;
-    btn.addEventListener('click', async () => {
-      btn.disabled = true;
-      const original = btn.textContent;
-      btn.textContent = 'Gerando…';
-      try {
-        await carregarPptxGenJS();
-        if (typeof window.baixarApresentacao !== 'function') throw new Error('módulo de exportação ausente.');
-        await window.baixarApresentacao(dados);
-      } catch (e) {
-        console.error(e);
-        alert('Não foi possível gerar o PowerPoint: ' + e.message);
-      } finally {
-        btn.disabled = false;
-        btn.textContent = original;
+  // ---------- botões de exportação (PowerPoint e PDF) ----------
+  function ligarBotoesExportacao(dados) {
+    const acoes = {
+      'btn-pptx': {
+        rotulo: 'PowerPoint',
+        executar: async () => {
+          await carregarPptxGenJS();
+          if (typeof window.baixarApresentacao !== 'function') throw new Error('módulo de exportação ausente.');
+          await window.baixarApresentacao(dados);
+        }
+      },
+      'btn-pdf': {
+        rotulo: 'PDF',
+        executar: async () => {
+          if (typeof window.baixarPdf !== 'function') throw new Error('módulo de exportação ausente.');
+          await window.baixarPdf(dados);
+        }
       }
-    });
+    };
+    const botoes = Object.keys(acoes).map((id) => document.getElementById(id));
+    for (const btn of botoes) {
+      btn.disabled = false;
+      btn.addEventListener('click', async () => {
+        const original = btn.innerHTML;
+        botoes.forEach((b) => { b.disabled = true; });
+        btn.textContent = 'Gerando…';
+        try {
+          await acoes[btn.id].executar();
+        } catch (e) {
+          console.error(e);
+          alert('Não foi possível gerar o ' + acoes[btn.id].rotulo + ': ' + e.message);
+        } finally {
+          btn.innerHTML = original;
+          botoes.forEach((b) => { b.disabled = false; });
+        }
+      });
+    }
   }
 
   // ---------- planilha (Google Drive, arquivo .xlsx) ----------
@@ -511,7 +528,7 @@
       return;
     }
     renderPagina(dados);
-    ligarBotaoPptx(dados);
+    ligarBotoesExportacao(dados);
   }
 
   window.ForumDados = { montarDados, carregarPlanilha };

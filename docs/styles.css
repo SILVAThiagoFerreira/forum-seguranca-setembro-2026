@@ -50,13 +50,17 @@ body {
   flex: none; color: rgba(255,255,255,.58); font-size: 10px; font-weight: 600;
   letter-spacing: .12em; white-space: nowrap;
 }
-.btn-pptx {
+.acoes { flex: none; display: flex; gap: 8px; }
+.btn-export {
   flex: none; display: inline-flex; align-items: center; gap: 6px;
-  border: 0; border-radius: 4px; padding: 9px 14px; cursor: pointer;
-  background: var(--red); color: #fff; font: inherit; font-size: 13px; font-weight: 700;
+  border: 1px solid transparent; border-radius: 4px; padding: 9px 14px; cursor: pointer;
+  font: inherit; font-size: 13px; font-weight: 700;
 }
+.btn-pptx { background: var(--red); color: #fff; }
 .btn-pptx:hover { background: var(--red-dk); color: #fff; }
-.btn-pptx:disabled { opacity: .6; cursor: progress; }
+.btn-pdf { background: transparent; color: #fff; border-color: rgba(255,255,255,.7); }
+.btn-pdf:hover { background: rgba(255,255,255,.12); color: #fff; }
+.btn-export:disabled { opacity: .6; cursor: progress; }
 
 /* ---------- navegação de seções ---------- */
 .faixa-nav {
@@ -92,22 +96,22 @@ main { max-width: 1320px; margin: 0 auto; padding: 16px; }
 /* ---------- KPI strip ---------- */
 .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 24px; margin-bottom: 24px; }
 .kpi { position: relative; background: none; padding: 0; }
-.kpi-rotulo { font-size: 11px; font-weight: 400; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
-.kpi-valor { font-size: 32px; font-weight: 400; color: var(--ink); line-height: 1.15; margin-top: 4px; }
+.kpi-rotulo { font-size: 10px; font-weight: 400; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+.kpi-valor { font-size: 28px; font-weight: 400; color: var(--ink); line-height: 1.15; margin-top: 4px; }
 .kpi.vermelho .kpi-valor { color: var(--red-dk); }
 .kpi.verde .kpi-valor { color: var(--ok); }
-.kpi-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.kpi-sub { font-size: 10.5px; color: var(--muted); margin-top: 2px; }
 
 /* ---------- blocos ---------- */
 .bloco {
   background: var(--card); padding: 0 0 8px; margin-bottom: 40px;
   scroll-margin-top: 70px;
 }
-.bloco-cab { margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid var(--line); }
+.bloco-cab { margin-bottom: 20px; }
 .bloco-cab h3 {
-  margin: 0; font-size: 20px; font-weight: 400; color: var(--ink);
+  margin: 0; font-size: 14px; font-weight: 400; color: var(--ink);
 }
-.bloco-cab p { margin: 4px 0 0; color: var(--text); font-size: 14px; }
+.bloco-cab p { margin: 4px 0 0; color: var(--text); font-size: 10.5px; }
 .grade-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
 .grade-2 .bloco { margin-bottom: 0; }
 .grade-kpi { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 24px; margin-bottom: 20px; }
@@ -115,20 +119,19 @@ main { max-width: 1320px; margin: 0 auto; padding: 16px; }
 .grafico { position: relative; height: 320px; }
 .grafico.alto { height: 380px; }
 .grafico.baixo { height: 240px; }
-.legenda-manual { margin: 10px 0 0; font-size: 12px; color: var(--text); }
+.legenda-manual { margin: 10px 0 0; font-size: 11px; color: var(--text); }
 .legenda-manual i { display: inline-block; width: 10px; height: 10px; border-radius: 0; vertical-align: -1px; margin: 0 4px 0 14px; }
-.nota { margin: 14px 0 0; font-size: 12px; color: var(--muted); }
+.nota { margin: 14px 0 0; font-size: 11px; color: var(--muted); }
 .nota b { color: var(--ink); font-weight: 400; }
 
 /* ---------- tabelas ---------- */
 .tabela-wrap { overflow-x: auto; }
-table.tabela { width: 100%; border-collapse: collapse; font-size: 13px; }
+table.tabela { width: 100%; border-collapse: collapse; font-size: 11.5px; }
 table.tabela th {
   background: var(--bg); color: var(--muted); text-align: left; font-weight: 400;
-  padding: 8px 10px; font-size: 12px; white-space: nowrap;
-  border-bottom: 1px solid var(--cinza-claro);
+  padding: 8px 10px; font-size: 10.5px; white-space: nowrap;
 }
-table.tabela td { padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+table.tabela td { padding: 8px 10px; vertical-align: top; }
 table.tabela td.num, table.tabela th.num { text-align: right; white-space: nowrap; }
 table.tabela tfoot td { font-weight: 400; border-top: 1px solid var(--ink); border-bottom: 0; }
 table.tabela td.centro, table.tabela th.centro { text-align: center; }
@@ -159,7 +162,7 @@ table.tabela td.centro, table.tabela th.centro { text-align: center; }
 .lista-eventos li { margin-bottom: 4px; }
 
 /* ---------- pauta ---------- */
-.pauta { margin: 0; padding-left: 22px; columns: 2; column-gap: 40px; }
+.pauta { margin: 0; padding-left: 22px; columns: 2; column-gap: 40px; font-size: 12.5px; }
 .pauta li { margin-bottom: 8px; break-inside: avoid; }
 
 /* ---------- calendário Cruz Verde ---------- */
@@ -191,7 +194,7 @@ table.tabela td.centro, table.tabela th.centro { text-align: center; }
 @media print {
   html, body { background: #fff; }
   body { font-size: 11pt; }
-  .btn-pptx, .faixa-nav, .topo .marcas { display: none !important; }
+  .acoes, .faixa-nav, .topo .marcas { display: none !important; }
   .topo { padding: 0 0 8px; border-bottom: 1px solid var(--line); background: #fff; color: var(--ink); position: static; min-height: 0; }
   .topo h1 { font-size: 22pt; color: var(--red-dk); text-align: left; }
   .topo-unit { display: none !important; }
@@ -220,11 +223,11 @@ table.tabela td.centro, table.tabela th.centro { text-align: center; }
   .topo h1 { order: 1; flex-basis: 100%; font-size: 15px; }
   .logo-enaex { height: 24px; }
   .topo-unit { display: none; }
-  .btn-pptx { margin-left: auto; }
+  .acoes { margin-left: auto; }
   .faixa-nav { gap: 16px; padding: 0 16px; }
   .bloco { padding: 0 0 4px; }
   .cabecalho-pagina h2.titulo-pagina { font-size: 22px; }
-  .kpi-valor { font-size: 26px; }
+  .kpi-valor { font-size: 24px; }
   .grafico { height: 280px; }
   .grafico.alto { height: 340px; }
   .calendario { max-width: 100%; }

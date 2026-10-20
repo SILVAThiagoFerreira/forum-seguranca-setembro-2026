@@ -1,18 +1,27 @@
 (function () {
   'use strict';
 
-  // Exportação no padrão visual das lâminas de referência (Pressão Acústica / Vibração
-  // por Categoria, US Vale Verde): fundo branco, título vermelho, filetes finos e sem bordas.
+  // Exportação no padrão visual das lâminas de referência (US Vale Verde): fundo branco,
+  // título vermelho e uma única linha escura ("Strictly private") acima do rodapé.
   // Medidas extraídas do PPTX de referência: página 13,333 x 8,527 pol.
+  // A mesma descrição de lâminas alimenta o PowerPoint (pptxgenjs) e o PDF (palco HTML + jsPDF).
   var C = {
     branco: 'FFFFFF', vermelho: 'B5121B', escuro: '3E4349', texto: '3E4349',
     medio: '8A9098', linha: 'C4C8CD', rosa: 'E3B5B9', cinza: '8A9098',
     ardosia: '3D4248', alerta: 'B5121B', claro: 'C3C6CB'
   };
+  // Tamanhos de fonte em pontos (reduzidos em relação à versão anterior)
+  var T = {
+    titulo: 15, subtitulo: 10, secao: 13, texto: 11.5, pauta: 14,
+    indicadorRotulo: 10.5, indicadorValor: 22, indicadorSub: 9,
+    tabela: 10.5, eixo: 10, rotulo: 9.5, legenda: 10, rodape: 8
+  };
   var FONT = 'Arial';
   var LAYOUT = 'REFERENCIA';
   var PAG_W = 13.333, PAG_H = 8.527;
   var X0 = 0.45, W = 12.433;
+  var POL = 96;       // pixels por polegada no palco HTML (usado só no PDF)
+  var PT = POL / 72;  // pixels por ponto
 
   function soma(arr, f) { return arr.reduce(function (s, x) { return s + f(x); }, 0); }
   function num(v, casas) { return Number(v).toFixed(casas || 0).replace('.', ','); }
@@ -32,35 +41,26 @@
   function obterLogos(opcoes) {
     opcoes = opcoes || {};
     var enaex = opcoes.logoEnaex ? Promise.resolve(opcoes.logoEnaex) : buscarImagem('assets/enaex-referencia.png');
-    var vv = opcoes.logoVV ? Promise.resolve(opcoes.logoVV) : buscarImagem('assets/vale-verde.png');
-    return Promise.all([enaex, vv]).then(function (r) { return { enaex: r[0], vv: r[1] }; });
+    return enaex.then(function (dados) { return { enaex: dados }; });
   }
 
   function texto(s, t, x, y, w, h, o) {
-    var op = { x: x, y: y, w: w, h: h, fontFace: FONT, fontSize: 13, color: C.texto, margin: 0, valign: 'top' };
+    var op = { x: x, y: y, w: w, h: h, fontFace: FONT, fontSize: T.texto, color: C.texto, margin: 0, valign: 'top' };
     for (var k in o) op[k] = o[k];
     s.addText(t, op);
   }
 
-  function filete(s, x, y, w, cor, espessura) {
-    s.addShape('line', { x: x, y: y, w: w, h: 0, line: { color: cor || C.linha, width: espessura || 0.75 } });
-  }
-
-  // Cabeçalho: título vermelho, subtítulo cinza-escuro, logos à direita.
-  // Rodapé: fonte à esquerda, "STRICTLY PRIVATE AND CONFIDENTIAL" à direita e filete escuro acima.
+  // Cabeçalho: título vermelho, subtítulo cinza-escuro, logo Enaex à direita.
+  // Rodapé: apenas a linha principal escura e "STRICTLY PRIVATE AND CONFIDENTIAL" à direita.
   function lamina(pptx, ctx, o) {
     var s = pptx.addSlide();
     s.background = { color: C.branco };
     ctx.slides.push(s);
-    texto(s, String(o.titulo || '').toLocaleUpperCase('pt-BR'), X0, 0.5, 9.0, 0.42, { fontSize: 22, color: C.vermelho });
-    texto(s, o.sub || '', X0, 0.93, 10.0, 0.3, { fontSize: 13, color: C.texto });
-    if (o.secao) {
-      texto(s, o.secao, X0, 1.62, W, 0.3, { fontSize: 15, color: C.texto });
-      filete(s, X0, 1.98, W, C.linha, 0.75);
-    }
+    texto(s, String(o.titulo || '').toLocaleUpperCase('pt-BR'), X0, 0.5, 9.0, 0.42, { fontSize: T.titulo, color: C.vermelho });
+    texto(s, o.sub || '', X0, 0.93, 10.0, 0.3, { fontSize: T.subtitulo, color: C.texto });
+    if (o.secao) texto(s, o.secao, X0, 1.62, W, 0.3, { fontSize: T.secao, color: C.texto });
     s.addShape('rect', { x: X0, y: 7.98, w: W, h: 0.02, fill: { color: C.escuro }, line: { type: 'none' } });
-    texto(s, o.fonte || '', X0, 8.1, 8.8, 0.2, { fontSize: 8, color: C.medio });
-    texto(s, 'STRICTLY PRIVATE AND CONFIDENTIAL', X0, 8.1, W, 0.2, { fontSize: 9, color: C.escuro, align: 'right' });
+    texto(s, 'STRICTLY PRIVATE AND CONFIDENTIAL', X0, 8.1, W, 0.2, { fontSize: T.rodape, color: C.escuro, align: 'right' });
     return s;
   }
 
@@ -69,40 +69,38 @@
     var colW = W / itens.length;
     itens.forEach(function (c, i) {
       var x = X0 + i * colW;
-      texto(s, c.rotulo, x, y, colW - 0.2, 0.25, { fontSize: 12, color: C.texto });
-      texto(s, String(c.valor), x, y + 0.27, colW - 0.2, 0.5, { fontSize: 26, bold: true, color: c.cor || C.escuro });
-      if (c.sub) texto(s, c.sub, x, y + 0.8, colW - 0.2, 0.25, { fontSize: 10, color: C.medio });
+      texto(s, c.rotulo, x, y, colW - 0.2, 0.25, { fontSize: T.indicadorRotulo, color: C.texto });
+      texto(s, String(c.valor), x, y + 0.27, colW - 0.2, 0.5, { fontSize: T.indicadorValor, bold: true, color: c.cor || C.escuro });
+      if (c.sub) texto(s, c.sub, x, y + 0.8, colW - 0.2, 0.25, { fontSize: T.indicadorSub, color: C.medio });
     });
   }
 
   // Gráficos: sem grade, sem eixo de valores, eixo de categorias em cinza-claro, rótulos em negrito.
   function opcChart(extra) {
     var o = {
-      catAxisLabelFontFace: FONT, catAxisLabelFontSize: 11, catAxisLabelColor: C.escuro,
+      catAxisLabelFontFace: FONT, catAxisLabelFontSize: T.eixo, catAxisLabelColor: C.escuro,
       catAxisLineShow: true, catAxisLineColor: C.linha, catAxisLineSize: 1,
       valAxisHidden: true, valGridLine: { style: 'none' }, catGridLine: { style: 'none' },
-      showLegend: false, legendFontFace: FONT, legendFontSize: 11, legendColor: C.escuro,
-      showValue: true, dataLabelFontFace: FONT, dataLabelFontBold: true, dataLabelFontSize: 11,
+      showLegend: false, legendFontFace: FONT, legendFontSize: T.legenda, legendColor: C.escuro,
+      showValue: true, dataLabelFontFace: FONT, dataLabelFontBold: true, dataLabelFontSize: T.rotulo,
       dataLabelColor: C.escuro, dataLabelPosition: 'outEnd', barGapWidthPct: 60
     };
     for (var k in extra) o[k] = extra[k];
     return o;
   }
 
-  function complemento(pptx, ctx, p, fonte) {
+  function complemento(pptx, ctx, p) {
     var s = lamina(pptx, ctx, { titulo: p.titulo, sub: p.referencia || 'Fonte exclusiva: planilha do Google Drive',
-      secao: p.secao || 'Resultados por unidade:', fonte: fonte });
+      secao: p.secao || 'Resultados por unidade:' });
     if (p.linhas && p.linhas.length) {
       var rows = [p.colunas].concat(p.linhas.map(function (r) { return r.map(function (v) { return v == null ? 'Sem dados' : String(v); }); }));
-      var rowH = 0.32;
       s.addTable(rows.map(function (r, i) {
         return r.map(function (c) {
-          return { text: c, options: { bold: i === 0, color: C.escuro, fontSize: i === 0 ? 12 : 12 } };
+          return { text: c, options: { bold: i === 0, color: C.escuro, fontSize: T.tabela } };
         });
       }), { x: X0, y: 2.15, w: W, colW: [7.0, 2.65, 2.783], fontFace: FONT, margin: [0.03, 0.05, 0.03, 0.05],
-        border: { type: 'none' }, rowH: rowH, autoPage: false });
-      filete(s, X0, 2.15 + rowH, W, C.linha, 0.75);
-      texto(s, p.nota, X0, 7.02, W, 0.8, { fontSize: 13, align: 'justify' });
+        border: { type: 'none' }, rowH: 0.32, autoPage: false });
+      texto(s, p.nota, X0, 7.02, W, 0.8, { fontSize: T.texto, align: 'justify' });
     }
   }
 
@@ -116,12 +114,11 @@
       pptx.layout = LAYOUT;
       pptx.title = d.meta.evento + ' - ' + d.meta.periodo;
       var ctx = { logos: logos, slides: [] };
-      var fonte = d.meta.aviso;
       var s;
 
       // 1. Pauta
       s = lamina(pptx, ctx, { titulo: 'Pautas do fórum', sub: 'Principais assuntos que serão abordados na reunião · ' + d.meta.periodo,
-        secao: 'Temas da reunião:', fonte: fonte });
+        secao: 'Temas da reunião:' });
       var metade = Math.ceil(d.pauta.length / 2);
       [d.pauta.slice(0, metade), d.pauta.slice(metade)].forEach(function (col, c) {
         var partes = [];
@@ -129,7 +126,7 @@
           partes.push({ text: (c * metade + j + 1) + '.  ', options: { bold: true, color: C.vermelho } });
           partes.push({ text: t, options: { color: C.escuro, breakLine: true } });
         });
-        texto(s, partes, X0 + c * 6.35, 2.2, 5.9, 4.6, { fontSize: 16, paraSpaceAfter: 14 });
+        texto(s, partes, X0 + c * 6.35, 2.2, 5.9, 4.6, { fontSize: T.pauta, paraSpaceAfter: 14 });
       });
 
       // 2. Aderência por unidade
@@ -139,7 +136,7 @@
       var atingiu = ad.unidades.filter(function (u) { return u.valor >= ad.meta; }).map(function (u) { return u.nome; });
       var abaixo = ad.unidades.filter(function (u) { return u.valor < ad.meta; }).map(function (u) { return u.nome; });
       s = lamina(pptx, ctx, { titulo: 'Aderência de treinamentos obrigatórios', sub: 'Aderência por unidade (%). Referência: ' + ad.referencia + '.',
-        secao: 'Aderência por unidade (%):', fonte: fonte });
+        secao: 'Aderência por unidade (%):' });
       indicadores(s, 2.15, [
         { valor: num(ad.meta, 0) + '%', rotulo: 'Meta' },
         { valor: num(mediaAd, 2) + '%', rotulo: 'Aderência média', sub: 'média simples das unidades', cor: mediaAd >= ad.meta ? C.escuro : C.alerta },
@@ -156,7 +153,7 @@
         valAxisMajorUnit: 20, valAxisLabelFormatCode: '0"%"',
         dataLabelFormatCode: '0.00"%";-0.00"%";;',
         dataLabelPosition: 'ctr', dataLabelColor: C.branco,
-        catAxisLabelFontSize: 11, barGapWidthPct: 60 }));
+        catAxisLabelFontSize: T.eixo, barGapWidthPct: 60 }));
 
       // 3. VCT quantidades por unidade
       var vq = d.vct;
@@ -170,7 +167,7 @@
       var varPct = tPlan ? (tReal - tPlan) / tPlan * 100 : 0;
       var abaixoVct = us.filter(function (u) { return u.tecnicos + u.liderança < u.planejado; }).map(function (u) { return u.nome; });
       s = lamina(pptx, ctx, { titulo: 'VCT · Verificação do ciclo do trabalho', sub: 'Quantidades realizadas por unidade. Referência: ' + vq.referencia + '.',
-        secao: 'Quantidades realizadas e planejadas por unidade:', fonte: fonte });
+        secao: 'Quantidades realizadas e planejadas por unidade:' });
       indicadores(s, 2.15, [
         { valor: tTec, rotulo: 'Técnicos de segurança', sub: 'planejado: ' + pTec },
         { valor: tSup, rotulo: 'Liderança', sub: 'planejado: ' + pSup },
@@ -186,55 +183,332 @@
          { name: 'Total planejado', labels: vCats, values: us.map(function (u) { return u.planejado; }) }],
         opcChart({ x: X0, y: 3.5, w: W, h: 3.1, chartColors: [C.alerta, C.rosa, C.cinza, C.ardosia], showLegend: true, legendPos: 'b',
           valAxisMinVal: 0, valAxisMajorUnit: 1, valAxisLabelFormatCode: '0', dataLabelFormatCode: '0', barGapWidthPct: 60,
-          catAxisLabelFontSize: 10, catAxisLabelRotate: 0, dataLabelFontSize: 10 }));
+          catAxisLabelFontSize: 9, catAxisLabelRotate: 0, dataLabelFontSize: 9 }));
       texto(s, [{ text: 'Atenção, ', options: { bold: true, color: C.escuro } },
         { text: abaixoVct.length ? 'unidades abaixo do planejado: ' + abaixoVct.join('; ') + '.' : 'todas as unidades atingiram o planejado.', options: { color: C.texto } }],
-        X0, 7.02, W, 0.8, { fontSize: 13, align: 'justify' });
+        X0, 7.02, W, 0.8, { fontSize: T.texto, align: 'justify' });
 
-      if (d.auditorias.linhas && d.auditorias.linhas.length) complemento(pptx, ctx, d.auditorias, fonte);
+      if (d.auditorias.linhas && d.auditorias.linhas.length) complemento(pptx, ctx, d.auditorias);
 
       // 4. Desvios por gerência (unidade)
       var dv = d.desvios;
       var totalDv = soma(dv.unidades, function (x) { return x.valor; });
       s = lamina(pptx, ctx, { titulo: 'Nº de desvios por gerência e categoria', sub: 'Dados referentes ao mês de ' + dv.referencia + '.',
-        secao: 'Nº de desvios por unidade:', fonte: fonte });
+        secao: 'Nº de desvios por unidade:' });
       indicadores(s, 2.15, [{ valor: totalDv, rotulo: 'Total de desvios no mês', cor: C.alerta }]);
       var ordem = dv.unidades.slice().sort(function (a, b) { return a.valor - b.valor; });
       s.addChart('bar',
         [{ name: 'Desvios', labels: ordem.map(function (x) { return x.nome; }), values: ordem.map(function (x) { return x.valor; }) }],
         opcChart({ x: X0, y: 3.5, w: W, h: 3.45, barDir: 'bar', chartColors: [C.ardosia],
-          dataLabelFormatCode: '0', dataLabelPosition: 'outEnd', catAxisLabelFontSize: 11, dataLabelFontSize: 11, barGapWidthPct: 40 }));
+          dataLabelFormatCode: '0', dataLabelPosition: 'outEnd', catAxisLabelFontSize: T.eixo, dataLabelFontSize: T.rotulo, barGapWidthPct: 40 }));
 
-
-      // Logos no canto superior direito de todas as lâminas (Enaex e Mineração Vale Verde)
+      // Logo Enaex no canto superior direito de todas as lâminas
       ctx.slides.forEach(function (slide) {
-        slide.addImage({ data: logos.enaex, x: 9.79, y: 0.4, w: 1.57, h: 0.5 });
-        slide.addImage({ data: logos.vv, x: 11.71, y: 0.4, w: 1.17, h: 0.5 });
+        slide.addImage({ data: logos.enaex, x: X0 + W - 1.57, y: 0.4, w: 1.57, h: 0.5 });
       });
       return pptx;
     });
   }
 
+  function nomeArquivo(dados, extensao) {
+    return 'Forum_Seguranca_' + String(dados.meta.periodo).trim().replace(/\s+/g, '_') + '.' + extensao;
+  }
+
+  function baixarArquivo(blob, nome) {
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = nome;
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    // Revoga só depois de um tempo, para o Chrome terminar o download (evita arquivo .tmp).
+    setTimeout(function () { URL.revokeObjectURL(url); a.remove(); }, 60000);
+    return nome;
+  }
+
   function baixarApresentacao(dados) {
-    var nome = 'Forum_Seguranca_' + String(dados.meta.periodo).trim().replace(/\s+/g, '_') + '.pptx';
-    // O writeFile do PptxGenJS revoga a URL do blob em 100 ms, antes de o Chrome terminar
-    // o download (o arquivo ficava como .tmp). Aqui a URL só é revogada depois de 60 s.
+    var nome = nomeArquivo(dados, 'pptx');
     return construirApresentacao(dados, {}).then(function (pptx) {
       return pptx.write({ outputType: 'blob' });
     }).then(function (blob) {
-      var url = URL.createObjectURL(blob);
-      var a = document.createElement('a');
-      a.href = url;
-      a.download = nome;
-      a.style.display = 'none';
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(function () { URL.revokeObjectURL(url); a.remove(); }, 60000);
-      return nome;
+      return baixarArquivo(blob, nome);
+    });
+  }
+
+  // ---------- palco HTML: desenha cada lâmina no navegador (base do PDF) ----------
+  // Implementa as mesmas chamadas usadas acima (addText, addShape, addImage, addTable, addChart),
+  // em um <div> de 13,333 x 8,527 pol., para o html2canvas capturar.
+  function posicaoCss(o) {
+    var css = 'position:absolute;left:' + (o.x * POL) + 'px;top:' + (o.y * POL) + 'px;width:' + (o.w * POL) + 'px;';
+    if (o.h !== undefined) css += 'height:' + (o.h * POL) + 'px;';
+    return css;
+  }
+
+  function novoDiv(css) {
+    var d = document.createElement('div');
+    d.style.cssText = css;
+    return d;
+  }
+
+  function PalcoSlide() {
+    this.el = novoDiv('position:relative;overflow:hidden;background:#ffffff;width:' + (PAG_W * POL) + 'px;height:' + (PAG_H * POL) + 'px;');
+    this.graficos = [];
+  }
+
+  Object.defineProperty(PalcoSlide.prototype, 'background', {
+    set: function (v) { this.el.style.background = '#' + ((v && v.color) || C.branco); }
+  });
+
+  PalcoSlide.prototype.addText = function (conteudo, o) {
+    var caixa = novoDiv(posicaoCss(o) + 'font-family:' + FONT + ';font-size:' + (o.fontSize * PT) + 'px;color:#' + (o.color || C.texto) +
+      ';text-align:' + (o.align || 'left') + ';line-height:1.2;white-space:pre-wrap;' + (o.bold ? 'font-weight:700;' : ''));
+    var espaco = (o.paraSpaceAfter || 0) * PT;
+    var paragrafo = novoDiv('margin:0 0 ' + espaco + 'px 0;');
+    var trechos = Array.isArray(conteudo) ? conteudo : [{ text: conteudo, options: {} }];
+    trechos.forEach(function (tr) {
+      var op = tr.options || {};
+      var span = document.createElement('span');
+      span.textContent = tr.text;
+      if (op.bold) span.style.fontWeight = '700';
+      if (op.color) span.style.color = '#' + op.color;
+      paragrafo.appendChild(span);
+      if (op.breakLine) {
+        caixa.appendChild(paragrafo);
+        paragrafo = novoDiv('margin:0 0 ' + espaco + 'px 0;');
+      }
+    });
+    if (paragrafo.childNodes.length) caixa.appendChild(paragrafo);
+    this.el.appendChild(caixa);
+  };
+
+  PalcoSlide.prototype.addShape = function (tipo, o) {
+    if (tipo !== 'rect') return;
+    this.el.appendChild(novoDiv(posicaoCss(o) + 'background:#' + o.fill.color + ';'));
+  };
+
+  PalcoSlide.prototype.addImage = function (o) {
+    var img = document.createElement('img');
+    img.src = o.data;
+    img.alt = '';
+    img.style.cssText = posicaoCss(o) + 'object-fit:contain;';
+    this.el.appendChild(img);
+  };
+
+  PalcoSlide.prototype.addTable = function (linhas, o) {
+    var tab = document.createElement('table');
+    var m = o.margin || [0.03, 0.05, 0.03, 0.05];
+    var preenchimento = m.map(function (v) { return (v * POL) + 'px'; }).join(' ');
+    tab.style.cssText = 'position:absolute;left:' + (o.x * POL) + 'px;top:' + (o.y * POL) + 'px;width:' + (o.w * POL) +
+      'px;table-layout:fixed;border-collapse:collapse;font-family:' + (o.fontFace || FONT) + ';';
+    var grupo = document.createElement('colgroup');
+    (o.colW || []).forEach(function (cw) {
+      var col = document.createElement('col');
+      col.style.width = (cw * POL) + 'px';
+      grupo.appendChild(col);
+    });
+    tab.appendChild(grupo);
+    linhas.forEach(function (linha) {
+      var tr = document.createElement('tr');
+      tr.style.height = ((o.rowH || 0.3) * POL) + 'px';
+      linha.forEach(function (cel) {
+        var op = cel.options || {};
+        var td = document.createElement('td');
+        td.textContent = cel.text == null ? '' : String(cel.text);
+        td.style.cssText = 'padding:' + preenchimento + ';vertical-align:middle;border:0;text-align:left;' +
+          'font-size:' + ((op.fontSize || 10) * PT) + 'px;color:#' + (op.color || C.texto) + ';font-weight:' + (op.bold ? 700 : 400) + ';';
+        tr.appendChild(td);
+      });
+      tab.appendChild(tr);
+    });
+    this.el.appendChild(tab);
+  };
+
+  PalcoSlide.prototype.addChart = function (tipo, series, o) {
+    var canvas = document.createElement('canvas');
+    canvas.width = Math.round(o.w * POL);
+    canvas.height = Math.round(o.h * POL);
+    canvas.style.cssText = 'display:block;width:' + (o.w * POL) + 'px;height:' + (o.h * POL) + 'px;';
+    var caixa = novoDiv(posicaoCss(o));
+    caixa.appendChild(canvas);
+    this.el.appendChild(caixa);
+    this.graficos.push({ canvas: canvas, config: configurarGrafico(series, o) });
+  };
+
+  function PalcoPptx() {
+    this.slides = [];
+    this.layout = null;
+    this.title = '';
+  }
+  PalcoPptx.prototype.defineLayout = function () {};
+  PalcoPptx.prototype.addSlide = function () {
+    var s = new PalcoSlide();
+    this.slides.push(s);
+    return s;
+  };
+
+  // Formata um valor com um código de formato simples do PowerPoint ("0", "0\"%\"", "0.00\"%\";-0.00\"%\";;").
+  function formatarValor(codigo, v) {
+    var n = Number(v);
+    if (v === null || v === undefined || !Number.isFinite(n)) return '';
+    if (!codigo) return n.toLocaleString('pt-BR');
+    var partes = String(codigo).split(';');
+    var secao = n < 0 && partes.length > 1 ? partes[1] : (n === 0 && partes.length > 2 ? partes[2] : partes[0]);
+    if (!secao) return '';
+    var casasMatch = secao.match(/0\.(0+)/);
+    var casas = casasMatch ? casasMatch[1].length : 0;
+    var txt = Math.abs(n).toLocaleString('pt-BR', { minimumFractionDigits: casas, maximumFractionDigits: casas });
+    if (n < 0 && partes.length === 1) txt = '-' + txt;
+    return txt + (secao.indexOf('%') >= 0 ? '%' : '');
+  }
+
+  function fonteGrafico(tamanhoPt, negrito) {
+    return { family: FONT, size: tamanhoPt * PT, weight: negrito ? '700' : '400' };
+  }
+
+  // Rótulos longos de categoria são quebrados em duas linhas, perto do meio do nome.
+  function quebrarRotulo(nome) {
+    var s = String(nome);
+    if (s.length <= 14) return s;
+    var meio = s.length / 2, melhor = -1;
+    for (var i = 0; i < s.length; i++) {
+      if (s[i] === ' ' && (melhor < 0 || Math.abs(i - meio) < Math.abs(melhor - meio))) melhor = i;
+    }
+    return melhor < 0 ? s : [s.slice(0, melhor), s.slice(melhor + 1)];
+  }
+
+  // Converte as opções de gráfico das lâminas em configuração do Chart.js (mesma aparência).
+  function configurarGrafico(series, o) {
+    var horizontal = o.barDir === 'bar';
+    var empilhado = o.barGrouping === 'stacked';
+    var cores = o.chartColors || [];
+    var central = o.dataLabelPosition === 'ctr';
+    var labels = series[0].labels.map(quebrarRotulo);
+
+    var datasets = series.map(function (s, i) {
+      return {
+        label: s.name,
+        data: s.values,
+        backgroundColor: '#' + (cores[i] || C.escuro),
+        barPercentage: 0.9,
+        categoryPercentage: 0.8,
+        datalabels: {
+          display: o.showValue !== false,
+          anchor: central ? 'center' : 'end',
+          align: central ? 'center' : 'end',
+          offset: central ? 0 : 2,
+          color: '#' + (o.dataLabelColor || C.escuro),
+          font: fonteGrafico(o.dataLabelFontSize || T.rotulo, true),
+          formatter: function (v) { return formatarValor(o.dataLabelFormatCode, v); }
+        }
+      };
+    });
+
+    var escalaValor = {
+      stacked: empilhado, beginAtZero: true, display: !o.valAxisHidden, grid: { display: false },
+      ticks: {
+        font: fonteGrafico(T.eixo), color: '#' + C.escuro,
+        callback: function (v) { return formatarValor(o.valAxisLabelFormatCode, v); }
+      }
+    };
+    if (o.valAxisMinVal !== undefined) escalaValor.min = o.valAxisMinVal;
+    if (o.valAxisMaxVal !== undefined) escalaValor.max = o.valAxisMaxVal;
+    if (o.valAxisMajorUnit) escalaValor.ticks.stepSize = o.valAxisMajorUnit;
+
+    var escalaCat = {
+      stacked: empilhado, grid: { display: false }, border: { color: '#' + C.linha },
+      ticks: { autoSkip: false, maxRotation: 0, minRotation: 0, font: fonteGrafico(o.catAxisLabelFontSize || T.eixo), color: '#' + C.escuro }
+    };
+    if (horizontal) escalaCat.reverse = true; // primeira categoria embaixo, como no PowerPoint
+
+    var escalas = {};
+    escalas[horizontal ? 'x' : 'y'] = escalaValor;
+    escalas[horizontal ? 'y' : 'x'] = escalaCat;
+
+    return {
+      type: 'bar',
+      data: { labels: labels, datasets: datasets },
+      options: {
+        responsive: false,
+        animation: false,
+        devicePixelRatio: 2,
+        indexAxis: horizontal ? 'y' : 'x',
+        plugins: {
+          legend: {
+            display: !!o.showLegend,
+            position: o.legendPos === 'b' ? 'bottom' : 'top',
+            labels: { boxWidth: 12, color: '#' + C.escuro, font: fonteGrafico(o.legendFontSize || T.legenda) }
+          }
+        },
+        scales: escalas
+      }
+    };
+  }
+
+  // ---------- PDF ----------
+  var PDF_BIBLIOTECAS = [
+    'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js',
+    'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'
+  ];
+
+  function carregarScript(url) {
+    return new Promise(function (ok, erro) {
+      var s = document.createElement('script');
+      s.src = url;
+      s.onload = function () { ok(); };
+      s.onerror = function () { erro(new Error('não foi possível carregar ' + url)); };
+      document.head.appendChild(s);
+    });
+  }
+
+  function carregarBibliotecasPdf() {
+    var fila = Promise.resolve();
+    if (!window.html2canvas) fila = fila.then(function () { return carregarScript(PDF_BIBLIOTECAS[0]); });
+    if (!(window.jspdf && window.jspdf.jsPDF)) fila = fila.then(function () { return carregarScript(PDF_BIBLIOTECAS[1]); });
+    return fila;
+  }
+
+  function baixarPdf(dados) {
+    var nome = nomeArquivo(dados, 'pdf');
+    var graficos = [];
+    var raiz = null;
+    return carregarBibliotecasPdf().then(function () {
+      if (typeof Chart === 'undefined') throw new Error('biblioteca de gráficos não carregou.');
+      return construirApresentacao(dados, { PptxGenJS: PalcoPptx });
+    }).then(function (palco) {
+      raiz = document.createElement('div');
+      raiz.setAttribute('aria-hidden', 'true');
+      raiz.style.cssText = 'position:absolute;left:-100000px;top:0;';
+      palco.slides.forEach(function (s) {
+        raiz.appendChild(s.el);
+        s.graficos.forEach(function (g) { graficos.push(g); });
+      });
+      document.body.appendChild(raiz);
+      if (typeof ChartDataLabels !== 'undefined') Chart.register(ChartDataLabels);
+      graficos.forEach(function (g) { g.instancia = new Chart(g.canvas, g.config); });
+
+      var pdf = new window.jspdf.jsPDF({ orientation: 'landscape', unit: 'in', format: [PAG_W, PAG_H], compress: true });
+      var fila = Promise.resolve();
+      palco.slides.forEach(function (s, i) {
+        fila = fila.then(function () {
+          return window.html2canvas(s.el, { scale: 2, backgroundColor: '#ffffff', logging: false });
+        }).then(function (canvas) {
+          if (i > 0) pdf.addPage([PAG_W, PAG_H], 'landscape');
+          pdf.addImage(canvas.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, PAG_W, PAG_H);
+        });
+      });
+      return fila.then(function () {
+        pdf.save(nome);
+        return nome;
+      });
+    }).finally(function () {
+      graficos.forEach(function (g) { if (g.instancia) g.instancia.destroy(); });
+      if (raiz) raiz.remove();
     });
   }
 
   var alvo = typeof window !== 'undefined' ? window : this;
   alvo.construirApresentacao = construirApresentacao;
   alvo.baixarApresentacao = baixarApresentacao;
+  alvo.baixarPdf = baixarPdf;
 })();
