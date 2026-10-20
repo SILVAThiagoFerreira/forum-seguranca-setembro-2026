@@ -252,7 +252,7 @@
       corpo: h('div', {},
         h('div', { class: 'grade-kpi' },
           kpi({ rotulo: 'Total de desvios no mês', valor: fmt(total), cor: 'vermelho' })),
-        area1.caixa, h('p', { class: 'nota' }, 'Categoria: sem dados na planilha. Os registros disponíveis são agregados por unidade de serviço.'))
+        area1.caixa)
     });
   }
 
@@ -276,7 +276,7 @@
     ['aderencia', 'Treinamentos'],
     ['vct', 'VCT'],
     ['auditorias', 'Auditorias VCT'],
-    ['desvios', 'Desvios'], ['gut', 'GUT'], ['okr', 'OKR'], ['kaizen', 'Kaizens']
+    ['desvios', 'Desvios']
   ];
 
   function renderNav() {
@@ -294,9 +294,8 @@
       renderPauta(d),
       renderAderencia(d),
       renderVct(d),
-      renderComplemento(d.auditorias),
-      renderDesvios(d),
-      renderComplemento(d.gut), renderComplemento(d.okr), renderComplemento(d.kaizen)
+      ...(d.auditorias.linhas.length ? [renderComplemento(d.auditorias)] : []),
+      renderDesvios(d)
     );
     renderNav();
     desenharGraficos();
@@ -470,19 +469,6 @@
       }),
       nota: 'Valores registrados na aba VCT. A planilha não informa procedimentos auditados, número de auditorias conformes ou meta de conformidade; esses indicadores não são estimados.'
     };
-    const gut = { id: 'gut', numero: 6, titulo: 'Nº de desvios por GUT', referencia: '',
-      nota: 'Sem dados de GUT na planilha. Não há pontuações, classificação baixa/média/alta nem conformidade por GUT disponíveis.' };
-    const okr = { id: 'okr', numero: 7, titulo: 'OKR · Promover a segurança', referencia: '',
-      nota: 'Sem dados de OKR na planilha. A gestão de desvios não distingue GUT médio/alto nem informa os limites Gate, Appropriated e Exceeded.' };
-    const ka = abaDe(wb, 'kaizen');
-    const kaRows = ka.slice(1).filter(r => numero(r[3]) !== null && mesIdx(r[1]) >= 0 && numero(r[0]) !== null);
-    const grupos = new Map();
-    kaRows.forEach(r => grupos.set(nomeLimpo(r[2]), (grupos.get(nomeLimpo(r[2])) || 0) + numero(r[3])));
-    const periodos = [...new Set(kaRows.map(r => String(r[0]) + '-' + String(mesIdx(r[1]) + 1).padStart(2, '0')))].sort();
-    const kaizen = { id: 'kaizen', numero: 8, titulo: 'Kaizens acumulados',
-      referencia: periodos.length ? 'Períodos preenchidos: ' + periodos.join(', ') : '',
-      itens: [...grupos].map(([nome, valor]) => ({ nome, valor })),
-      nota: kaRows.length ? 'Soma dos lançamentos preenchidos na aba Kaizen; campos vazios não são contados como zero. Não há base anterior para calcular evolução.' : 'Sem lançamentos na aba Kaizen. Acumulado e evolução indisponíveis.' };
 
     const dados = {
       meta: {
@@ -491,7 +477,7 @@
         periodo: periodo,
         aviso: 'Fonte: planilha "KPI’s Segurança do Trabalho" no Google Drive. Referências: pauta ' + periodo + '; aderência ' + aderencia.referencia + '; VCT ' + vct.referencia + '; desvios ' + desvios.referencia + '.'
       },
-      auditorias, gut, okr, kaizen,
+      auditorias,
       pauta: pauta,
       aderencia: aderencia,
       vct: vct,

@@ -103,14 +103,6 @@
         border: { type: 'none' }, rowH: rowH, autoPage: false });
       filete(s, X0, 2.15 + rowH, W, C.linha, 0.75);
       texto(s, p.nota, X0, 7.02, W, 0.8, { fontSize: 13, align: 'justify' });
-    } else if (p.itens && p.itens.length) {
-      var itens = p.itens.slice().sort(function (a, b) { return a.valor - b.valor; });
-      s.addChart('bar', [{ name: 'Kaizens', labels: itens.map(function (x) { return x.nome; }), values: itens.map(function (x) { return x.valor; }) }],
-        opcChart({ x: X0, y: 2.15, w: W, h: 4.75, barDir: 'bar', chartColors: [C.ardosia], dataLabelFormatCode: '0', valAxisMinVal: 0, barGapWidthPct: 40 }));
-      texto(s, p.nota, X0, 7.02, W, 0.8, { fontSize: 13, align: 'justify' });
-    } else {
-      texto(s, 'Dados indisponíveis na fonte', X0, 2.4, W, 0.5, { fontSize: 22, bold: true, color: C.escuro });
-      texto(s, p.nota, X0, 3.1, W, 0.9, { fontSize: 15, color: C.texto });
     }
   }
 
@@ -199,7 +191,7 @@
         { text: abaixoVct.length ? 'unidades abaixo do planejado: ' + abaixoVct.join('; ') + '.' : 'todas as unidades atingiram o planejado.', options: { color: C.texto } }],
         X0, 7.02, W, 0.8, { fontSize: 13, align: 'justify' });
 
-      complemento(pptx, ctx, d.auditorias, fonte);
+      if (d.auditorias.linhas && d.auditorias.linhas.length) complemento(pptx, ctx, d.auditorias, fonte);
 
       // 4. Desvios por gerência (unidade)
       var dv = d.desvios;
@@ -212,11 +204,7 @@
         [{ name: 'Desvios', labels: ordem.map(function (x) { return x.nome; }), values: ordem.map(function (x) { return x.valor; }) }],
         opcChart({ x: X0, y: 3.5, w: W, h: 3.45, barDir: 'bar', chartColors: [C.ardosia],
           dataLabelFormatCode: '0', dataLabelPosition: 'outEnd', catAxisLabelFontSize: 11, dataLabelFontSize: 11, barGapWidthPct: 40 }));
-      texto(s, 'Categoria: sem dados na planilha. Registros agregados por unidade de serviço.', X0, 7.02, W, 0.5, { fontSize: 13 });
 
-      complemento(pptx, ctx, d.gut, fonte);
-      complemento(pptx, ctx, d.okr, fonte);
-      complemento(pptx, ctx, d.kaizen, fonte);
 
       // Logos no canto superior direito de todas as lâminas (Enaex e Mineração Vale Verde)
       ctx.slides.forEach(function (slide) {
@@ -229,8 +217,20 @@
 
   function baixarApresentacao(dados) {
     var nome = 'Forum_Seguranca_' + String(dados.meta.periodo).trim().replace(/\s+/g, '_') + '.pptx';
+    // O writeFile do PptxGenJS revoga a URL do blob em 100 ms, antes de o Chrome terminar
+    // o download (o arquivo ficava como .tmp). Aqui a URL só é revogada depois de 60 s.
     return construirApresentacao(dados, {}).then(function (pptx) {
-      return pptx.writeFile({ fileName: nome });
+      return pptx.write({ outputType: 'blob' });
+    }).then(function (blob) {
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = nome;
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(function () { URL.revokeObjectURL(url); a.remove(); }, 60000);
+      return nome;
     });
   }
 
