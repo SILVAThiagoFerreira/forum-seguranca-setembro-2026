@@ -1,11 +1,11 @@
 (function () {
   'use strict';
 
-  // Padrão Enaex: barra superior escura, logo branca, título centralizado, filete vermelho
+  // Exportação clean alinhada às referências de sismografia.
   var C = {
-    barra: '38424B', vermelho: 'E30613', escuro: '3D4248', medio: '8B9096',
-    texto: '4A4A4A', linha: 'E5E5E5', branco: 'FFFFFF', alerta: 'B5121B', ardosia: '3D4248',
-    amarelo: 'E2B4B8', cinza: '8B9096'
+    barra: 'FFFFFF', vermelho: 'B20F20', escuro: '42464B', medio: '8D9399',
+    texto: '4A4F54', linha: 'D9DADC', branco: 'FFFFFF', alerta: 'B20F20', ardosia: '42464B',
+    amarelo: 'E2B2B6', cinza: '8D9399'
   };
   var FONT = 'Arial';
   var X0 = 0.5, W = 12.33, LARG = 13.333;
@@ -37,7 +37,7 @@
 
   function obterLogo(opcoes) {
     if (opcoes && opcoes.logo) return Promise.resolve(opcoes.logo);
-    return buscarImagem('assets/enaex-white.png');
+    return buscarImagem('assets/enaex-export.png');
   }
 
   function texto(s, t, x, y, w, h, o) {
@@ -50,25 +50,20 @@
     s.addShape('rect', { x: x, y: y, w: w, h: h, fill: { color: cor || C.branco }, line: linhaCor ? { color: linhaCor, width: 0.75 } : { type: 'none' } });
   }
 
-  // Cabeçalho comum: barra escura, logo branca à esquerda, título centralizado, filete vermelho
+  // Cabeçalho branco, título vermelho à esquerda e subtítulo em cinza.
   function lamina(pptx, ctx, o) {
     var s = pptx.addSlide();
     s.background = { color: C.branco };
-    retangulo(s, 0, 0, LARG, 1.1, C.barra);
-    retangulo(s, 0, 1.1, LARG, 0.06, C.vermelho);
-    var a = ctx.dim;
-    var he = 0.5, we = he * a.w / a.h;
-    s.addImage({ data: ctx.logo, x: X0, y: 0.3, w: we, h: he });
-    texto(s, o.titulo, 2.65, 0.1, 10.18, 0.9, { fontSize: 24, bold: true, color: C.branco, align: 'center', valign: 'middle' });
-    texto(s, o.sub, X0, 1.32, W, 0.4, { fontSize: 14, color: C.texto, valign: 'middle' });
-    s.addShape('line', { x: X0, y: 6.95, w: W, h: 0, line: { color: C.escuro, width: 0.75 } });
-    texto(s, o.fonte || '', X0, 7.02, 8.8, 0.35, { fontSize: 7, color: C.medio });
-    texto(s, 'STRICTLY PRIVATE AND CONFIDENTIAL', X0, 7.02, W, 0.3, { fontSize: 8, color: C.medio, align: 'right' });
+    ctx.slides.push(s);
+    texto(s, String(o.titulo || '').toLocaleUpperCase('pt-BR'), X0, 0.42, 9.3, 0.55, { fontSize: 27, color: C.vermelho, valign: 'middle' });
+    texto(s, o.sub, X0, 1.0, W, 0.36, { fontSize: 15, color: C.texto, valign: 'middle' });
+    texto(s, o.fonte || '', X0, 7.08, 8.8, 0.25, { fontSize: 7, color: C.medio });
+    texto(s, 'STRICTLY PRIVATE AND CONFIDENTIAL', X0, 7.08, W, 0.25, { fontSize: 8, color: C.medio, align: 'right' });
     return s;
   }
 
   function cartao(s, x, y, w, h, valor, rotulo, sub, cor) {
-    retangulo(s, x, y, w, h, C.branco, C.linha);
+    s.addShape('line', { x, y: y + h, w, h: 0, line: { color: C.linha, width: 0.7 } });
     texto(s, rotulo, x + 0.12, y + 0.08, w - 0.24, 0.28, { fontSize: 10, color: C.medio, align: 'center' });
     texto(s, String(valor), x + 0.12, y + 0.34, w - 0.24, 0.4, { fontSize: 22, bold: true, color: cor || C.escuro, align: 'center', valign: 'middle' });
     if (sub) texto(s, sub, x + 0.12, y + h - 0.3, w - 0.24, 0.25, { fontSize: 9, color: C.texto, align: 'center' });
@@ -99,22 +94,21 @@
     var s = lamina(pptx, ctx, { titulo: p.titulo, sub: p.referencia || 'Fonte exclusiva: planilha do Google Drive', fonte: fonte });
     if (p.linhas && p.linhas.length) {
       var rows = [p.colunas].concat(p.linhas.map(function (r) { return r.map(function (v) { return v == null ? 'Sem dados' : String(v); }); }));
-      s.addTable(rows, { x: X0, y: 1.95, w: W, h: 3.8, colW: [7.0, 2.65, 2.68],
-        fontFace: FONT, fontSize: 12, color: C.escuro, margin: 0.08,
-        border: { type: 'solid', color: C.linha, pt: 0.5 },
-        rowH: 0.3, autoPage: false, bold: false });
-      retangulo(s, X0, 5.95, W, 0.75, 'F7F7F8');
-      texto(s, p.nota, X0 + 0.15, 6.05, W - 0.3, 0.55, { fontSize: 11 });
+      s.addTable(rows, { x: X0, y: 1.8, w: W, h: 3.5, colW: [7.0, 2.65, 2.68],
+        fontFace: FONT, fontSize: 10, color: C.escuro, margin: 0.04,
+        border: { type: 'none' },
+        rowH: 0.25, autoPage: false, bold: false });
+      s.addShape('line', { x: X0, y: 5.55, w: W, h: 0, line: { color: C.linha, width: 0.7 } });
+      texto(s, p.nota, X0, 5.65, W, 0.8, { fontSize: 10, color: C.texto });
     } else if (p.itens && p.itens.length) {
       var itens = p.itens.slice().sort(function (a, b) { return a.valor - b.valor; });
       s.addChart('bar', [{ name: 'Kaizens', labels: itens.map(function (x) { return x.nome; }), values: itens.map(function (x) { return x.valor; }) }],
         opcChart({ x: X0, y: 1.95, w: W, h: 4.2, barDir: 'bar', chartColors: [C.ardosia], dataLabelFormatCode: '0', valAxisMinVal: 0 }));
       texto(s, p.nota, X0, 6.35, W, 0.45, { fontSize: 11 });
     } else {
-      retangulo(s, X0, 2.45, W, 2.3, 'F7F7F8');
-      retangulo(s, X0, 2.45, 0.06, 2.3, C.vermelho);
-      texto(s, 'Dados indisponíveis na fonte', X0 + 0.3, 2.8, W - 0.6, 0.5, { fontSize: 22, bold: true });
-      texto(s, p.nota, X0 + 0.3, 3.5, W - 0.6, 0.9, { fontSize: 17 });
+      s.addShape('line', { x: X0, y: 2.05, w: W, h: 0, line: { color: C.linha, width: 0.7 } });
+      texto(s, 'Dados indisponíveis na fonte', X0, 2.5, W, 0.5, { fontSize: 22, bold: true, color: C.escuro });
+      texto(s, p.nota, X0, 3.2, W, 0.9, { fontSize: 17, color: C.texto });
     }
   }
 
@@ -126,7 +120,8 @@
       var pptx = new Ctor();
       pptx.layout = 'LAYOUT_WIDE';
       pptx.title = d.meta.evento + ' - ' + d.meta.periodo;
-      var ctx = { logo: logo, dim: tamanhoPng(logo) };
+      var ctx = { logo: logo, dim: tamanhoPng(logo), slides: [] };
+      var logoHe = 0.62, logoW = logoHe * ctx.dim.w / ctx.dim.h;
       var fonte = d.meta.aviso;
       var s;
 
@@ -216,6 +211,11 @@
       complemento(pptx, ctx, d.gut, fonte);
       complemento(pptx, ctx, d.okr, fonte);
       complemento(pptx, ctx, d.kaizen, fonte);
+      // Coloca a marca no topo da pilha de objetos para manter a renderização
+      // consistente mesmo em slides com tabelas e gráficos nativos.
+      ctx.slides.forEach(function (slide) {
+        slide.addImage({ data: ctx.logo, x: 12.83 - logoW, y: 0.33, w: logoW, h: logoHe });
+      });
       return pptx;
     });
   }
