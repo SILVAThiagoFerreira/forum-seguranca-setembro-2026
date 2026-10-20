@@ -229,3 +229,12 @@ table.tabela td.centro, table.tabela th.centro { text-align: center; }
   .grafico.alto { height: 340px; }
   .calendario { max-width: 100%; }
 }
+
+.sem-dados { padding: 20px; background: #f7f7f8; border-left: 3px solid #e30613; color: #4a4a4a; line-height: 1.6; }
+.faixa-nav { position: relative; }
+
+.grafico-plot { position: relative; height: 100%; }
+@media (max-width: 640px) {
+  .grafico { overflow-x: auto; overflow-y: hidden; }
+  .grafico-plot { width: 850px; }
+}

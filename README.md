@@ -14,3 +14,19 @@ Dashboard estático dos gráficos do fórum (Gerência de Mineração Nordeste/U
 - `docs/assets/`: logos Enaex.
 
 Publicado pela branch `main`, pasta `/docs`.
+
+## Lâminas e contrato de dados
+
+A página e o PowerPoint seguem exclusivamente as oito lâminas da referência fornecida:
+1. Pauta (aba Pauta).
+2. Aderência de treinamentos (aba Aderência de Treinamentos).
+3. Quantidades de VCT (aba VCT).
+4. Resultados de auditorias VCT: itens em não conformidade e resultado médio por unidade, conforme registrados na aba VCT.
+5. Desvios por gerência e categoria: valores por unidade da aba Gestão de Desvios; categoria indisponível na fonte.
+6. GUT: indisponível na estrutura atual da planilha.
+7. OKR: indisponível na estrutura atual da planilha.
+8. Kaizens acumulados: soma dos lançamentos preenchidos da aba Kaizen; indica ausência de dados quando vazia.
+
+O PDF define os temas e a sequência, nunca os valores. Não há fallback para planilha local, dados de exemplo ou números do PDF. Cada indicador exibe sua própria referência. Células vazias não são convertidas em zero; zeros explicitamente registrados são preservados. VCT exige quantidades e metas preenchidas para evitar totais parciais. A exportação fica desabilitada até a leitura da fonte concluir.
+
+A fonte atual não permite reconstruir a tabela por procedimento auditado, categorias de desvios, classificações GUT ou metas OKR. Essas limitações aparecem nas próprias lâminas. A aba Kaizen está preparada para receber lançamentos, sem base histórica inventada.

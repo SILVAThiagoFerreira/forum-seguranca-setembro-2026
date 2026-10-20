@@ -54,7 +54,7 @@
   let pendentes = [];
   function area(altura, descricao) {
     const canvas = h('canvas', { role: 'img', 'aria-label': descricao });
-    return { caixa: h('div', { class: 'grafico ' + (altura || '') }, canvas), canvas: canvas };
+    return { caixa: h('div', { class: 'grafico ' + (altura || '') }, h('div', { class: 'grafico-plot' }, canvas)), canvas: canvas };
   }
   function grafico(canvas, config) {
     pendentes.push({ canvas: canvas, config: config });
@@ -118,8 +118,8 @@
     const u = v.unidades;
     const series = [
       { label: 'Técnicos de segurança', data: u.map((x) => x.tecnicos), backgroundColor: COR.alerta },
-      { label: 'Supervisores', data: u.map((x) => x.supervisores), backgroundColor: COR.amarelo },
-      { label: 'Total realizado', data: u.map((x) => x.tecnicos + x.supervisores), backgroundColor: COR.cinza },
+      { label: 'Liderança', data: u.map((x) => x.liderança), backgroundColor: COR.amarelo },
+      { label: 'Total realizado', data: u.map((x) => x.tecnicos + x.liderança), backgroundColor: COR.cinza },
       { label: 'Total planejado', data: u.map((x) => x.planejado), backgroundColor: COR.ok }
     ];
     const maximo = Math.max(...series.flatMap((s) => s.data));
@@ -211,14 +211,14 @@
     const v = d.vct;
     const us = v.unidades;
     const tec = soma(us.map((u) => u.tecnicos));
-    const sup = soma(us.map((u) => u.supervisores));
+    const sup = soma(us.map((u) => u.liderança));
     const planTec = soma(us.map((u) => u.planejTec));
     const planSup = soma(us.map((u) => u.planejSup));
     const real = tec + sup;
     const plan = soma(us.map((u) => u.planejado));
     const variacao = plan ? ((real - plan) / plan) * 100 : 0;
-    const abaixo = us.filter((u) => u.tecnicos + u.supervisores < u.planejado).map((u) => u.nome);
-    const area1 = area('', 'Gráfico de colunas agrupadas: técnicos, supervisores, total realizado e total planejado por unidade');
+    const abaixo = us.filter((u) => u.tecnicos + u.liderança < u.planejado).map((u) => u.nome);
+    const area1 = area('', 'Gráfico de colunas agrupadas: técnicos, liderança, total realizado e total planejado por unidade');
     grafico(area1.canvas, chartVct(v));
     return bloco({
       id: 'vct',
@@ -228,8 +228,8 @@
       corpo: h('div', {},
         h('div', { class: 'grade-kpi' },
           kpi({ rotulo: 'Técnicos de segurança', valor: fmt(tec), sub: 'planejado: ' + fmt(planTec) }),
-          kpi({ rotulo: 'Supervisores', valor: fmt(sup), sub: 'planejado: ' + fmt(planSup) }),
-          kpi({ rotulo: 'Total realizado', valor: fmt(real), sub: 'técnicos + supervisores' }),
+          kpi({ rotulo: 'Liderança', valor: fmt(sup), sub: 'planejado: ' + fmt(planSup) }),
+          kpi({ rotulo: 'Total realizado', valor: fmt(real), sub: 'técnicos + liderança' }),
           kpi({ rotulo: 'Total planejado', valor: fmt(plan) }),
           kpi({ rotulo: 'Variação', valor: sinal(variacao) + '%', sub: abaixo.length + ' de ' + us.length + ' unidades não atingiram o planejado', cor: variacao < 0 ? 'vermelho' : 'verde' })),
         area1.caixa,
@@ -246,14 +246,28 @@
     grafico(area1.canvas, chartDesvios(dv.unidades));
     return bloco({
       id: 'desvios',
-      kicker: 'Lâmina 4 · Registros de desvios',
-      titulo: 'Nº de desvios por gerência',
+      kicker: 'Lâmina 5 · Registros de desvios',
+      titulo: 'Nº de desvios por gerência e categoria',
       sub: 'Dados referentes ao mês de ' + dv.referencia + '.',
       corpo: h('div', {},
         h('div', { class: 'grade-kpi' },
           kpi({ rotulo: 'Total de desvios no mês', valor: fmt(total), cor: 'vermelho' })),
-        area1.caixa)
+        area1.caixa, h('p', { class: 'nota' }, 'Categoria: sem dados na planilha. Os registros disponíveis são agregados por unidade de serviço.'))
     });
+  }
+
+  function renderComplemento(p) {
+    let corpo = h('p', { class: 'sem-dados' }, p.nota);
+    if (p.linhas && p.linhas.length) {
+      corpo = h('div', {}, h('div', { class: 'tabela-wrap' }, h('table', { class: 'tabela' },
+        h('thead', {}, h('tr', {}, p.colunas.map(c => h('th', {}, c)))),
+        h('tbody', {}, p.linhas.map(r => h('tr', {}, r.map(v => h('td', {}, v == null ? 'Sem dados' : v))))))), corpo);
+    }
+    if (p.itens && p.itens.length) {
+      const a = area('alto', p.titulo); grafico(a.canvas, chartDesvios(p.itens));
+      corpo = h('div', {}, a.caixa, corpo);
+    }
+    return bloco({ id: p.id, kicker: 'Lâmina ' + p.numero, titulo: p.titulo, sub: p.referencia, corpo });
   }
 
   // ---------- montagem ----------
@@ -261,7 +275,8 @@
     ['pauta', 'Pauta'],
     ['aderencia', 'Treinamentos'],
     ['vct', 'VCT'],
-    ['desvios', 'Desvios']
+    ['auditorias', 'Auditorias VCT'],
+    ['desvios', 'Desvios'], ['gut', 'GUT'], ['okr', 'OKR'], ['kaizen', 'Kaizens']
   ];
 
   function renderNav() {
@@ -279,7 +294,9 @@
       renderPauta(d),
       renderAderencia(d),
       renderVct(d),
-      renderDesvios(d)
+      renderComplemento(d.auditorias),
+      renderDesvios(d),
+      renderComplemento(d.gut), renderComplemento(d.okr), renderComplemento(d.kaizen)
     );
     renderNav();
     desenharGraficos();
@@ -318,6 +335,7 @@
 
   function ligarBotaoPptx(dados) {
     const btn = document.getElementById('btn-pptx');
+    btn.disabled = false;
     btn.addEventListener('click', async () => {
       btn.disabled = true;
       const original = btn.textContent;
@@ -352,10 +370,10 @@
   const mesIdx = (v) => MESES.findIndex((m) => norm(v).startsWith(m));
   const arred2 = (x) => Math.round(x * 100) / 100;
   function numero(v) {
-    if (typeof v === 'number') return isNaN(v) ? null : v;
+    if (typeof v === 'number') return Number.isFinite(v) ? v : null;
     if (v == null || String(v).trim() === '') return null;
     const n = Number(String(v).trim().replace(',', '.'));
-    return isNaN(n) ? null : n;
+    return Number.isFinite(n) ? n : null;
   }
 
   function abaDe(wb, chave) {
@@ -379,13 +397,15 @@
     for (let i = 4; i < ad[0].length; i++) if (nomeLimpo(ad[0][i])) colsUnidades.push(i);
     const resultados = ad.slice(1).filter((r) => r && norm(r[3]).startsWith('resultado') && colsUnidades.some((i) => numero(r[i]) !== null));
     if (!resultados.length) throw new Error('nenhum resultado de aderência preenchido');
+    resultados.sort((a, b) => (Number(a[0]) * 12 + mesIdx(a[1])) - (Number(b[0]) * 12 + mesIdx(b[1])));
     const ultAd = resultados[resultados.length - 1];
     const metaAd = numero(ultAd[2]);
+    if (metaAd === null) throw new Error('meta de treinamentos ausente na planilha');
     const aderencia = {
       referencia: MESES_NOME[mesIdx(ultAd[1])] + ' ' + ultAd[0],
-      meta: metaAd <= 1 ? arred2(metaAd * 100) : metaAd,
+      meta: metaAd !== null && metaAd <= 1 ? arred2(metaAd * 100) : metaAd,
       unidades: colsUnidades.filter((i) => numero(ultAd[i]) !== null)
-        .map((i) => ({ nome: nomeLimpo(ad[0][i]), valor: arred2(numero(ultAd[i]) * 100) }))
+        .map((i) => ({ nome: nomeLimpo(ad[0][i]), valor: arred2(numero(ultAd[i]) <= 1 ? numero(ultAd[i]) * 100 : numero(ultAd[i])) }))
     };
 
     // VCT: uma linha por unidade e tipo; colunas de mês a partir da E; mês de referência = último mês preenchido
@@ -396,13 +416,15 @@
       if (m >= 0) colsMesVct.push({ col: i, mes: m });
     }
     const linhasVct = vc.slice(1).filter((r) => r && nomeLimpo(r[1]) && r[2]);
-    const mesVct = Math.max(...linhasVct.flatMap((r) => colsMesVct.filter((c) => numero(r[c.col]) !== null).map((c) => c.mes)));
+    const mesVct = Math.max(...linhasVct.filter(r => /^(tecnico|lideranca)/.test(norm(r[2]))).flatMap((r) => colsMesVct.filter((c) => numero(r[c.col]) !== null).map((c) => c.mes)));
+    if (!Number.isFinite(mesVct)) throw new Error('nenhuma quantidade VCT preenchida');
     const colVct = colsMesVct.find((c) => c.mes === mesVct).col;
     const anoVct = linhasVct[0][0];
     const unidadesVct = [...new Set(linhasVct.map((r) => nomeLimpo(r[1])))];
     const achar = (u, tipo) => linhasVct.find((r) => nomeLimpo(r[1]) === u && norm(r[2]).startsWith(tipo));
     const valorVct = (r) => (r ? numero(r[colVct]) : null);
-    const planoVct = (r) => (r ? numero(r[3]) || 0 : 0);
+    const planoVct = (r) => (r ? numero(r[3]) : null);
+    const exigir = (v, campo) => { if (v === null) throw new Error('Dado ausente: ' + campo); return v; };
     const vct = {
       referencia: MESES_NOME[mesVct] + ' ' + anoVct,
       unidades: unidadesVct.map((u) => {
@@ -410,10 +432,10 @@
         const lid = achar(u, 'lideranca');
         return {
           nome: u,
-          tecnicos: valorVct(tec) || 0,
-          supervisores: valorVct(lid) || 0,
-          planejTec: planoVct(tec),
-          planejSup: planoVct(lid),
+          tecnicos: exigir(valorVct(tec), u + ' / técnico VCT'),
+          liderança: exigir(valorVct(lid), u + ' / liderança VCT'),
+          planejTec: exigir(planoVct(tec), u + ' / meta técnico'),
+          planejSup: exigir(planoVct(lid), u + ' / meta liderança'),
           planejado: planoVct(tec) + planoVct(lid)
         };
       })
@@ -430,12 +452,37 @@
     const linhasDesv = gd.slice(1).filter((r) => r && nomeLimpo(r[0]) && norm(r[1]));
     const linhasDesvios = linhasDesv.filter((r) => norm(r[1]) === 'desvios');
     const mesDesv = Math.max(...linhasDesvios.flatMap((r) => colsMesDesv.filter((c) => numero(r[c.col]) !== null).map((c) => c.mes)));
+    if (!Number.isFinite(mesDesv)) throw new Error('nenhum registro de desvios preenchido');
     const anoDesv = String(linhasDesv[0][2]).trim();
     const colMesDesv = colsMesDesv.find((c) => c.mes === mesDesv).col;
     const desvios = {
       referencia: MESES_NOME[mesDesv] + ' ' + anoDesv,
-      unidades: linhasDesvios.map((r) => ({ nome: nomeLimpo(r[0]), valor: numero(r[colMesDesv]) || 0 }))
+      unidades: linhasDesvios.filter(r => numero(r[colMesDesv]) !== null).map((r) => ({ nome: nomeLimpo(r[0]), valor: numero(r[colMesDesv]) }))
     };
+
+    const auditorias = {
+      id: 'auditorias', numero: 4, titulo: 'VCT · Resultados das auditorias', referencia: vct.referencia,
+      colunas: ['Unidade de serviço', 'Itens em não conformidade', 'Resultado médio (%)'],
+      linhas: unidadesVct.map(u => {
+        const nc = achar(u, 'itens em nao conformidade');
+        const resultado = linhasVct.find(r => nomeLimpo(r[1]) === u && /^(resultado|resultato) medio/.test(norm(r[2])));
+        return [u, valorVct(nc), valorVct(resultado) === null ? null : pct(valorVct(resultado) * 100, 2)];
+      }),
+      nota: 'Valores registrados na aba VCT. A planilha não informa procedimentos auditados, número de auditorias conformes ou meta de conformidade; esses indicadores não são estimados.'
+    };
+    const gut = { id: 'gut', numero: 6, titulo: 'Nº de desvios por GUT', referencia: '',
+      nota: 'Sem dados de GUT na planilha. Não há pontuações, classificação baixa/média/alta nem conformidade por GUT disponíveis.' };
+    const okr = { id: 'okr', numero: 7, titulo: 'OKR · Promover a segurança', referencia: '',
+      nota: 'Sem dados de OKR na planilha. A gestão de desvios não distingue GUT médio/alto nem informa os limites Gate, Appropriated e Exceeded.' };
+    const ka = abaDe(wb, 'kaizen');
+    const kaRows = ka.slice(1).filter(r => numero(r[3]) !== null && mesIdx(r[1]) >= 0 && numero(r[0]) !== null);
+    const grupos = new Map();
+    kaRows.forEach(r => grupos.set(nomeLimpo(r[2]), (grupos.get(nomeLimpo(r[2])) || 0) + numero(r[3])));
+    const periodos = [...new Set(kaRows.map(r => String(r[0]) + '-' + String(mesIdx(r[1]) + 1).padStart(2, '0')))].sort();
+    const kaizen = { id: 'kaizen', numero: 8, titulo: 'Kaizens acumulados',
+      referencia: periodos.length ? 'Períodos preenchidos: ' + periodos.join(', ') : '',
+      itens: [...grupos].map(([nome, valor]) => ({ nome, valor })),
+      nota: kaRows.length ? 'Soma dos lançamentos preenchidos na aba Kaizen; campos vazios não são contados como zero. Não há base anterior para calcular evolução.' : 'Sem lançamentos na aba Kaizen. Acumulado e evolução indisponíveis.' };
 
     const dados = {
       meta: {
@@ -444,6 +491,7 @@
         periodo: periodo,
         aviso: 'Fonte: planilha "KPI’s Segurança do Trabalho" no Google Drive. Referências: pauta ' + periodo + '; aderência ' + aderencia.referencia + '; VCT ' + vct.referencia + '; desvios ' + desvios.referencia + '.'
       },
+      auditorias, gut, okr, kaizen,
       pauta: pauta,
       aderencia: aderencia,
       vct: vct,
@@ -480,5 +528,6 @@
     ligarBotaoPptx(dados);
   }
 
+  window.ForumDados = { montarDados, carregarPlanilha };
   iniciar();
 })();

@@ -59,10 +59,10 @@
     var a = ctx.dim;
     var he = 0.5, we = he * a.w / a.h;
     s.addImage({ data: ctx.logo, x: X0, y: 0.3, w: we, h: he });
-    texto(s, o.titulo, 0, 0.1, LARG, 0.9, { fontSize: 26, bold: true, color: C.branco, align: 'center', valign: 'middle' });
+    texto(s, o.titulo, 2.65, 0.1, 10.18, 0.9, { fontSize: 24, bold: true, color: C.branco, align: 'center', valign: 'middle' });
     texto(s, o.sub, X0, 1.32, W, 0.4, { fontSize: 14, color: C.texto, valign: 'middle' });
     s.addShape('line', { x: X0, y: 6.95, w: W, h: 0, line: { color: C.escuro, width: 0.75 } });
-    texto(s, o.fonte || '', X0, 7.02, 9, 0.3, { fontSize: 8, color: C.medio });
+    texto(s, o.fonte || '', X0, 7.02, 8.8, 0.35, { fontSize: 7, color: C.medio });
     texto(s, 'STRICTLY PRIVATE AND CONFIDENTIAL', X0, 7.02, W, 0.3, { fontSize: 8, color: C.medio, align: 'right' });
     return s;
   }
@@ -93,6 +93,29 @@
     };
     for (var k in extra) o[k] = extra[k];
     return o;
+  }
+
+  function complemento(pptx, ctx, p, fonte) {
+    var s = lamina(pptx, ctx, { titulo: p.titulo, sub: p.referencia || 'Fonte exclusiva: planilha do Google Drive', fonte: fonte });
+    if (p.linhas && p.linhas.length) {
+      var rows = [p.colunas].concat(p.linhas.map(function (r) { return r.map(function (v) { return v == null ? 'Sem dados' : String(v); }); }));
+      s.addTable(rows, { x: X0, y: 1.95, w: W, h: 3.8, colW: [7.0, 2.65, 2.68],
+        fontFace: FONT, fontSize: 12, color: C.escuro, margin: 0.08,
+        border: { type: 'solid', color: C.linha, pt: 0.5 },
+        rowH: 0.3, autoPage: false, bold: false });
+      retangulo(s, X0, 5.95, W, 0.75, 'F7F7F8');
+      texto(s, p.nota, X0 + 0.15, 6.05, W - 0.3, 0.55, { fontSize: 11 });
+    } else if (p.itens && p.itens.length) {
+      var itens = p.itens.slice().sort(function (a, b) { return a.valor - b.valor; });
+      s.addChart('bar', [{ name: 'Kaizens', labels: itens.map(function (x) { return x.nome; }), values: itens.map(function (x) { return x.valor; }) }],
+        opcChart({ x: X0, y: 1.95, w: W, h: 4.2, barDir: 'bar', chartColors: [C.ardosia], dataLabelFormatCode: '0', valAxisMinVal: 0 }));
+      texto(s, p.nota, X0, 6.35, W, 0.45, { fontSize: 11 });
+    } else {
+      retangulo(s, X0, 2.45, W, 2.3, 'F7F7F8');
+      retangulo(s, X0, 2.45, 0.06, 2.3, C.vermelho);
+      texto(s, 'Dados indisponíveis na fonte', X0 + 0.3, 2.8, W - 0.6, 0.5, { fontSize: 22, bold: true });
+      texto(s, p.nota, X0 + 0.3, 3.5, W - 0.6, 0.9, { fontSize: 17 });
+    }
   }
 
   function construirApresentacao(d, opcoes) {
@@ -134,41 +157,41 @@
       ]);
       var cats = ad.unidades.map(function (u) { return u.nome; });
       var metaSerie = cats.map(function () { return ad.meta; });
-      s.addChart([
-        { type: 'bar', data: [
-          { name: 'Atingiu a meta', labels: cats, values: vals.map(function (v) { return v >= ad.meta ? v : 0; }) },
-          { name: 'Abaixo da meta', labels: cats, values: vals.map(function (v) { return v < ad.meta ? v : 0; }) }
-        ], options: { chartColors: [C.ardosia, C.alerta], barGrouping: 'stacked', barGapWidthPct: 60,
-          dataLabelFormatCode: '0.00"%";-0.00"%";;', dataLabelPosition: 'inEnd', dataLabelColor: C.branco } },
-        { type: 'line', data: [{ name: 'Meta ' + ad.meta + '%', labels: cats, values: metaSerie }], options: {
-          chartColors: [C.escuro], lineSize: 1.5, lineDash: 'dash', lineDataSymbol: 'none', showValue: false } }
-      ], opcChart({ x: X0, y: 3.05, w: W, h: 3.85, showLegend: true, legendPos: 'b', valAxisMinVal: 0, valAxisMaxVal: 110,
-        valAxisMajorUnit: 20, valAxisLabelFormatCode: '0"%"', catAxisLabelFontSize: 9 }));
+      s.addChart('bar', [
+        { name: 'Atingiu a meta', labels: cats, values: vals.map(function (v) { return v >= ad.meta ? v : 0; }) },
+        { name: 'Abaixo da meta', labels: cats, values: vals.map(function (v) { return v < ad.meta ? v : 0; }) }
+      ], opcChart({ x: X0, y: 3.05, w: W, h: 3.85,
+        chartColors: [C.ardosia, C.alerta], barGrouping: 'stacked',
+        showLegend: true, legendPos: 'b', valAxisMinVal: 0, valAxisMaxVal: 110,
+        valAxisMajorUnit: 20, valAxisLabelFormatCode: '0"%"',
+        dataLabelFormatCode: '0.00"%";-0.00"%";;',
+        dataLabelPosition: 'inEnd', dataLabelColor: C.branco,
+        catAxisLabelFontSize: 9, barGapWidthPct: 60 }));
 
       // 3. VCT quantidades por unidade
       var vq = d.vct;
       var us = vq.unidades;
       var tTec = soma(us, function (u) { return u.tecnicos; });
-      var tSup = soma(us, function (u) { return u.supervisores; });
+      var tSup = soma(us, function (u) { return u.liderança; });
       var pTec = soma(us, function (u) { return u.planejTec; });
       var pSup = soma(us, function (u) { return u.planejSup; });
       var tReal = tTec + tSup;
       var tPlan = soma(us, function (u) { return u.planejado; });
       var varPct = tPlan ? (tReal - tPlan) / tPlan * 100 : 0;
-      var abaixoVct = us.filter(function (u) { return u.tecnicos + u.supervisores < u.planejado; }).map(function (u) { return u.nome; });
+      var abaixoVct = us.filter(function (u) { return u.tecnicos + u.liderança < u.planejado; }).map(function (u) { return u.nome; });
       s = lamina(pptx, ctx, { titulo: 'VCT · Verificação do ciclo do trabalho', sub: 'Quantidades realizadas por unidade. Referência: ' + vq.referencia + '.', fonte: fonte });
       linhaCartoes(s, 1.9, 1.0, [
         { valor: tTec, rotulo: 'Técnicos de segurança', sub: 'planejado: ' + pTec },
-        { valor: tSup, rotulo: 'Supervisores', sub: 'planejado: ' + pSup },
-        { valor: tReal, rotulo: 'Total realizado', sub: 'técnicos + supervisores' },
+        { valor: tSup, rotulo: 'Liderança', sub: 'planejado: ' + pSup },
+        { valor: tReal, rotulo: 'Total realizado', sub: 'técnicos + liderança' },
         { valor: tPlan, rotulo: 'Total planejado' },
         { valor: sinal(varPct, 0), rotulo: 'Variação', sub: abaixoVct.length + ' de ' + us.length + ' unidades abaixo', cor: varPct < 0 ? C.alerta : C.escuro }
       ]);
       var vCats = us.map(function (u) { return u.nome; });
       s.addChart('bar',
         [{ name: 'Técnicos de segurança', labels: vCats, values: us.map(function (u) { return u.tecnicos; }) },
-         { name: 'Supervisores', labels: vCats, values: us.map(function (u) { return u.supervisores; }) },
-         { name: 'Total realizado', labels: vCats, values: us.map(function (u) { return u.tecnicos + u.supervisores; }) },
+         { name: 'Liderança', labels: vCats, values: us.map(function (u) { return u.liderança; }) },
+         { name: 'Total realizado', labels: vCats, values: us.map(function (u) { return u.tecnicos + u.liderança; }) },
          { name: 'Total planejado', labels: vCats, values: us.map(function (u) { return u.planejado; }) }],
         opcChart({ x: X0, y: 3.05, w: W, h: 3.35, chartColors: [C.alerta, C.amarelo, C.cinza, C.ardosia], showLegend: true, legendPos: 'b',
           valAxisMinVal: 0, valAxisMajorUnit: 1, valAxisLabelFormatCode: '0', dataLabelFormatCode: '0', barGapWidthPct: 40, catAxisLabelFontSize: 9, dataLabelFontSize: 8 }));
@@ -176,17 +199,23 @@
         { text: abaixoVct.length ? 'unidades abaixo do planejado: ' + abaixoVct.join('; ') + '.' : 'todas as unidades atingiram o planejado.', options: { color: C.texto } }],
         X0, 6.5, W, 0.4, { fontSize: 11 });
 
-      // 4. Desvios por gerência (unidade)
+      complemento(pptx, ctx, d.auditorias, fonte);
+
+      // 5. Desvios por gerência (unidade)
       var dv = d.desvios;
       var totalDv = soma(dv.unidades, function (x) { return x.valor; });
-      s = lamina(pptx, ctx, { titulo: 'Nº de desvios por gerência', sub: 'Dados referentes ao mês de ' + dv.referencia + '.', fonte: fonte });
+      s = lamina(pptx, ctx, { titulo: 'Nº de desvios por gerência e categoria', sub: 'Dados referentes ao mês de ' + dv.referencia + '.', fonte: fonte });
       linhaCartoes(s, 1.9, 1.0, [{ valor: totalDv, rotulo: 'Total de desvios no mês', cor: C.alerta }]);
       var ordem = dv.unidades.slice().sort(function (a, b) { return a.valor - b.valor; });
       s.addChart('bar',
         [{ name: 'Desvios', labels: ordem.map(function (x) { return x.nome; }), values: ordem.map(function (x) { return x.valor; }) }],
-        opcChart({ x: X0, y: 3.05, w: W, h: 3.85, barDir: 'bar', chartColors: [C.ardosia], valAxisHidden: true,
+        opcChart({ x: X0, y: 3.05, w: W, h: 3.35, barDir: 'bar', chartColors: [C.ardosia], valAxisHidden: true,
           dataLabelFormatCode: '0', dataLabelPosition: 'outEnd', catAxisLabelFontSize: 10, dataLabelFontSize: 10, barGapWidthPct: 40 }));
 
+      texto(s, 'Categoria: sem dados na planilha. Registros agregados por unidade de serviço.', X0, 6.5, W, 0.3, { fontSize: 11 });
+      complemento(pptx, ctx, d.gut, fonte);
+      complemento(pptx, ctx, d.okr, fonte);
+      complemento(pptx, ctx, d.kaizen, fonte);
       return pptx;
     });
   }
