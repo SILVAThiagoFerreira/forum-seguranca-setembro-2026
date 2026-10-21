@@ -154,9 +154,6 @@
     return url;
   }
 
-  // Classes da GUT (como na referência): Baixa = GUT 3 a 6; Média = 7 a 11; Alta = 12 a 15
-  function classeGut(n) { return n <= 6 ? 'baixa' : (n <= 11 ? 'media' : 'alta'); }
-
   // Gráfico de barras. Séries com linha: true viram linha de meta (barra + linha no PowerPoint).
   function addGrafico(s, ctx, series, o) {
     var linhas = series.filter(function (x) { return x.linha; });
@@ -192,13 +189,15 @@
       texto(s, c.sub, x + 0.3, yCard + 0.94, cw - 0.5, 0.22, { fontSize: T.indicadorSub, color: C.medio });
     });
 
-    texto(s, 'Quantidade de desvios por valor de GUT', X0, 3.27, W, 0.3, { fontSize: T.secao, color: C.texto });
-    var guts = g.porGut.map(function (x) { return String(x.gut); });
-    var porClasse = function (cl) { return g.porGut.map(function (x) { return classeGut(x.gut) === cl ? x.valor : 0; }); };
+    texto(s, 'Quantidade de desvios por classe de GUT', X0, 3.27, W, 0.3, { fontSize: T.secao, color: C.texto });
+    // Uma categoria por classe; cada série tem valor só na própria classe (barras lado a lado, cor da classe)
+    var classes = ['baixa', 'media', 'alta'];
+    var cats = ['Baixa (3 a 6)', 'Média (7 a 11)', 'Alta (12 a 15)'];
+    var porClasse = function (cl) { return classes.map(function (k) { return k === cl ? g.classes[k] : 0; }); };
     addGrafico(s, ctx, [
-      { name: 'GUT baixa (3 a 6)', labels: guts, values: porClasse('baixa'), cor: C.verde },
-      { name: 'GUT média (7 a 11)', labels: guts, values: porClasse('media'), cor: C.amareloGut },
-      { name: 'GUT alta (12 a 15)', labels: guts, values: porClasse('alta'), cor: C.vermelho }
+      { name: 'GUT baixa (3 a 6)', labels: cats, values: porClasse('baixa'), cor: C.verde },
+      { name: 'GUT média (7 a 11)', labels: cats, values: porClasse('media'), cor: C.amareloGut },
+      { name: 'GUT alta (12 a 15)', labels: cats, values: porClasse('alta'), cor: C.vermelho }
     ], opcChart({ x: X0, y: 3.6, w: W, h: 4.3, chartColors: [C.verde, C.amareloGut, C.vermelho], showLegend: true, legendPos: 'b',
       dataLabelFormatCode: '0;-0;;', dataLabelPosition: 'outEnd', dataLabelFontSize: 10, catAxisLabelFontSize: 10, barGapWidthPct: 35 }));
     return s;
@@ -278,7 +277,6 @@
         s.addImage({ data: icone('calendario', C.verde), x: x + 0.1, y: y + 0.08, w: 0.5, h: 0.5 });
         var partes = [{ text: it.mes + ' ' + it.ano, options: { bold: true, color: C.vermelho } }];
         if (it.status === 'nao_houve') partes.push({ text: ' - Não houve fórum', options: { color: C.escuro } });
-        else if (it.status === 'sem_registro') partes.push({ text: ' - Sem registro na planilha', options: { color: C.escuro } });
         else partes.push({ text: ' - ' + [it.nome, it.unidade].filter(Boolean).join(' - '), options: { color: C.escuro } });
         texto(s, partes, x + 0.75, y + 0.2, colW - 1.4, 0.3, { fontSize: 12 });
         if (it.status === 'ok') s.addImage({ data: icone('check', C.verde), x: x + colW - 0.55, y: y + 0.13, w: 0.4, h: 0.4 });

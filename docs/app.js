@@ -216,24 +216,24 @@
     };
   }
 
-  // Nº desvios por GUT: três séries por GUT (baixa, média, alta), sem empilhar; rótulo só quando > 0
+  // Nº desvios por GUT: uma barra por classe (baixa, média, alta), na cor da classe
   function chartGutClasses(g) {
-    const serie = (cl, cor, nome) => ({
-      label: nome, backgroundColor: cor, borderRadius: 2, maxBarThickness: 22,
-      data: g.porGut.map((x) => (classeGut(x.gut) === cl ? x.valor : 0)),
-      datalabels: { display: (c) => c.dataset.data[c.dataIndex] > 0, anchor: 'end', align: 'end', offset: 1, color: COR.ardosia, font: { size: 9, weight: '700' }, formatter: (x) => fmt(x) }
-    });
+    const classes = [['baixa', 'Baixa (3 a 6)', COR.verde], ['media', 'Média (7 a 11)', COR.amareloGut], ['alta', 'Alta (12 a 15)', COR.vermelho]];
+    const valores = classes.map((c) => g.classes[c[0]]);
     return {
       type: 'bar',
       data: {
-        labels: g.porGut.map((x) => String(x.gut)),
-        datasets: [serie('baixa', COR.verde, 'Baixa'), serie('media', COR.amareloGut, 'Média'), serie('alta', COR.vermelho, 'Alta')]
+        labels: classes.map((c) => c[1]),
+        datasets: [{
+          label: 'Desvios', data: valores, backgroundColor: classes.map((c) => c[2]), borderRadius: 2, maxBarThickness: 90,
+          datalabels: { display: true, anchor: 'end', align: 'end', offset: 2, color: COR.ardosia, font: { weight: '700', size: 12 }, formatter: (x) => fmt(x) }
+        }]
       },
       options: configBase({
         plugins: { legend: { display: false } },
         scales: {
-          y: { beginAtZero: true, suggestedMax: 280, ticks: { display: false }, grid: { display: false } },
-          x: { grid: { display: false }, ticks: { autoSkip: false, font: { size: 10 } } }
+          y: { beginAtZero: true, suggestedMax: Math.max(...valores) * 1.15, ticks: { display: false }, grid: { display: false } },
+          x: { grid: { display: false }, ticks: { autoSkip: false, font: { size: 11 } } }
         }
       })
     };
@@ -376,9 +376,7 @@
     });
   }
 
-  const classeGut = (n) => (n <= 6 ? 'baixa' : (n <= 11 ? 'media' : 'alta'));
-
-  // Nº desvios por GUT: cartões por classe (verde, amarelo, vermelho) e total; gráfico por valor de GUT
+  // Nº desvios por GUT: cartões por classe (verde, amarelo, vermelho) e total; gráfico por classe
   function renderGut(d) {
     const g = d.gut;
     const total = g.classes.baixa + g.classes.media + g.classes.alta;
@@ -404,7 +402,7 @@
           cartao('GUT média', g.classes.media, COR.amareloGut, '#b58a00', parteTotal(g.classes.media)),
           cartao('GUT alta', g.classes.alta, COR.vermelho, COR.vermelho, parteTotal(g.classes.alta)),
           cartao('Total de desvios', total, COR.ardosia, COR.ardosia, '100% · ' + g.periodo)),
-        h('h4', { class: 'sub-bloco' }, 'Quantidade de desvios por valor de GUT'),
+        h('h4', { class: 'sub-bloco' }, 'Quantidade de desvios por classe de GUT'),
         area1.caixa,
         h('p', { class: 'legenda-manual' },
           h('i', { style: 'background:' + COR.verde }), 'GUT baixa (3 a 6)',
@@ -465,8 +463,7 @@
     const itens = d.cronograma;
     const metade = Math.floor(itens.length / 2);
     const linha = (it) => {
-      const detalhe = it.status === 'nao_houve' ? 'Não houve fórum'
-        : (it.status === 'sem_registro' ? 'Sem registro na planilha' : [it.nome, it.unidade].filter(Boolean).join(' - '));
+      const detalhe = it.status === 'nao_houve' ? 'Não houve fórum' : [it.nome, it.unidade].filter(Boolean).join(' - ');
       const status = it.status === 'ok' ? window.iconeLamina('check', COR.verde)
         : (it.status === 'nao_houve' ? window.iconeLamina('proibido', COR.cinza) : null);
       return h('li', { class: 'cron-item' },
@@ -718,7 +715,7 @@
 
     // Gestão de Desvios: linhas Desvios / Resolvidos / Pendentes por unidade; meses a partir da D.
     // Valor = desvios registrados no mês de referência (último mês com lançamento).
-    const gd = abaDe(wb, 'desvios');
+    const gd = abaDe(wb, 'gestao de desvios');
     const colsMesDesv = [];
     for (let i = 3; i < gd[0].length; i++) {
       const m = mesIdx(gd[0][i]);
@@ -806,6 +803,39 @@
       };
     }
 
+    // Nº desvios por GUT (aba "Desvios por GUT (Mês)"): linhas de classe Baixa / Média / Alta / Total;
+    // a planilha traz as classes por mês, não o detalhamento por valor de GUT. Mês = último com total lançado.
+    const gu = abaDe(wb, 'desvios por gut');
+    const linhaGut = (nome) => gu.slice(1).find((r) => r && norm(r[0]) === nome);
+    const colsMesGut = [];
+    for (let i = 3; i < gu[0].length; i++) {
+      const m = mesIdx(gu[0][i]);
+      if (m >= 0) colsMesGut.push({ col: i, mes: m });
+    }
+    const colGut = colsMesGut.filter((c) => numero(linhaGut('total') ? linhaGut('total')[c.col] : null) !== null).sort((a, b) => b.mes - a.mes)[0];
+    if (!colGut) throw new Error('nenhum total de desvios por GUT preenchido');
+    const valorGut = (nome) => { const r = linhaGut(nome); return exigir(numero(r ? r[colGut.col] : null), 'GUT / ' + nome); };
+    const gutClasses = { baixa: valorGut('baixa'), media: valorGut('media'), alta: valorGut('alta') };
+    const anoGut = String(gu.slice(1).find((r) => r && norm(r[1]) === 'desvio')[2]).trim();
+    const gut = {
+      periodo: MESES_NOME[colGut.mes].toLowerCase() + ' de ' + anoGut,
+      classes: gutClasses
+    };
+
+    // Cronograma de apresentação (aba "Cronograma Safety Share"): Ano, Mês, Responsável, Status
+    const cronograma = abaDe(wb, 'cronograma').slice(1).filter((r) => r && mesIdx(r[1]) >= 0).map((r) => {
+      const st = norm(r[3]);
+      const nome = nomeLimpo(r[2]);
+      return {
+        mes: MESES_NOME[mesIdx(r[1])],
+        ano: Number(r[0]),
+        nome: nome && nome !== '-' ? nome : null,
+        unidade: null,
+        status: st.startsWith('realizado') ? 'ok' : (st.startsWith('nao houve') ? 'nao_houve' : 'pendente')
+      };
+    });
+    if (!cronograma.length) throw new Error('cronograma de apresentação vazio');
+
     const auditorias = {
       id: 'auditorias', numero: 5, titulo: 'VCT - Resultados das auditorias', referencia: vct.referencia,
       colunas: ['Unidade de serviço', 'Itens em não conformidade', 'Resultado médio (%)', 'Quantidade Realizada'],
@@ -833,17 +863,17 @@
       vct: vct,
       desvios: desvios
     };
-    // Referências do fórum (docs/dados-referencia.js): GUT, OKR, cronograma e Kaizens.
-    // A planilha não traz estes dados. Na série mensal do OKR, a planilha tem prioridade quando preenchida.
+    // GUT e cronograma vêm da planilha. Parâmetros do OKR (Gate, Appropriated, Exceeded) e Kaizens não existem
+    // na planilha e vêm de docs/dados-referencia.js. Na série mensal do OKR, a planilha tem prioridade.
     const ref = window.DADOS_REFERENCIA;
     if (!ref) throw new Error('dados-referencia.js não carregou');
     const seriePlanilha = desvios.serie.map((m) => ({ mes: m.mes, valor: m.conclusao }));
-    dados.gut = ref.gut;
+    dados.gut = gut;
     dados.okr = Object.assign({}, ref.okr, {
       serie: seriePlanilha.length ? seriePlanilha : ref.okr.serieReferencia,
       fonteSerie: seriePlanilha.length ? 'planilha' : 'referência'
     });
-    dados.cronograma = ref.cronograma;
+    dados.cronograma = cronograma;
     dados.kaizens = ref.kaizens;
     if (!dados.pauta.length || !dados.aderencia.unidades.length || !dados.vct.unidades.length || !dados.desvios.unidades.length) {
       throw new Error('estrutura da planilha diferente do esperado');
