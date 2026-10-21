@@ -253,7 +253,7 @@
           },
           {
             type: 'line', label: 'Appropriated (' + k.appropriated + '%)', data: labels.map(() => k.appropriated), order: 1,
-            borderColor: COR.vermelho, borderWidth: 2, pointRadius: 0, datalabels: { display: false }
+            borderColor: COR.vermelho, borderWidth: 2, borderDash: [7, 5], pointRadius: 0, datalabels: { display: false }
           }
         ]
       },
@@ -384,9 +384,15 @@
     const total = g.classes.baixa + g.classes.media + g.classes.alta;
     const area1 = area('alto', 'Gráfico de colunas: quantidade de desvios por valor de GUT, coloridas por classe (baixa, média e alta)');
     grafico(area1.canvas, chartGutClasses(g));
-    const cartao = (rotulo, valor, cor) => h('div', { class: 'kpi-gut', style: 'border-left-color:' + cor },
-      h('div', { class: 'kpi-rotulo' }, rotulo),
-      h('div', { class: 'kpi-valor' }, fmt(valor)));
+    // Cartão: faixa fina e ponto na cor da classe; número na cor da classe (amarelo escurecido para leitura); % do total
+    const cartao = (rotulo, valor, cor, corValor, sub) => h('div', { class: 'kpi-gut' },
+      h('span', { class: 'kpi-faixa', style: 'background:' + cor }),
+      h('div', { class: 'kpi-topo' },
+        h('i', { class: 'kpi-dot', style: 'background:' + cor }),
+        h('span', { class: 'kpi-rotulo' }, rotulo)),
+      h('div', { class: 'kpi-valor', style: 'color:' + corValor }, fmt(valor)),
+      h('div', { class: 'kpi-sub' }, sub));
+    const parteTotal = (v) => pct(total ? (v / total) * 100 : 0, 1) + ' do total';
     return bloco({
       id: 'gut',
       kicker: 'Lâmina 6 - Resultados das auditorias (GUT)',
@@ -394,10 +400,10 @@
       sub: 'Dados referentes ao mês de ' + g.periodo + '.',
       corpo: h('div', {},
         h('div', { class: 'grade-gut' },
-          cartao('GUT baixa', g.classes.baixa, COR.verde),
-          cartao('GUT média', g.classes.media, COR.amareloGut),
-          cartao('GUT alta', g.classes.alta, COR.vermelho),
-          cartao('Total de desvios', total, COR.ardosia)),
+          cartao('GUT baixa', g.classes.baixa, COR.verde, COR.verde, parteTotal(g.classes.baixa)),
+          cartao('GUT média', g.classes.media, COR.amareloGut, '#b58a00', parteTotal(g.classes.media)),
+          cartao('GUT alta', g.classes.alta, COR.vermelho, COR.vermelho, parteTotal(g.classes.alta)),
+          cartao('Total de desvios', total, COR.ardosia, COR.ardosia, '100% · ' + g.periodo)),
         h('h4', { class: 'sub-bloco' }, 'Quantidade de desvios por valor de GUT'),
         area1.caixa,
         h('p', { class: 'legenda-manual' },

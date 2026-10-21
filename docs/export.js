@@ -60,7 +60,7 @@
     if (o.destaque) {
       // Lâmina de pauta: traço vermelho acima do título grande
       s.addShape('rect', { x: X0, y: 1.8, w: 1.1, h: 0.06, fill: { color: C.vermelho }, line: { type: 'none' } });
-      texto(s, titulo, X0, 1.98, 9.0, 0.6, { fontSize: T.tituloDestaque, bold: true, color: C.vermelho });
+      texto(s, titulo, X0, 1.98, 9.0, 0.6, { fontSize: T.tituloDestaque, bold: true, color: C.escuro });
       if (o.sub) texto(s, o.sub, X0, 2.62, 10.0, 0.3, { fontSize: T.subtitulo, color: C.texto });
     } else {
       texto(s, titulo, X0, 0.5, 9.0, 0.42, { fontSize: T.titulo, color: C.vermelho });
@@ -165,7 +165,7 @@
     var pura = function (lista) { return lista.map(function (x) { return { name: x.name, labels: x.labels, values: x.values }; }); };
     return s.addChart([
       { type: 'bar', data: pura(barras), options: { chartColors: barras.map(function (x) { return x.cor; }) } },
-      { type: 'line', data: pura(linhas), options: { chartColors: linhas.map(function (x) { return x.cor; }), lineSize: 2, lineDataSymbol: 'none', showValue: false } }
+      { type: 'line', data: pura(linhas), options: { chartColors: linhas.map(function (x) { return x.cor; }), lineSize: 2, lineDash: 'dash', lineDataSymbol: 'none', showValue: false } }
     ], o);
   }
 
@@ -174,29 +174,32 @@
     var g = d.gut;
     var total = g.classes.baixa + g.classes.media + g.classes.alta;
     var s = lamina(pptx, ctx, { titulo: 'Nº desvios por GUT', sub: 'Dados referentes ao mês de ' + g.periodo + '.' });
+    var parteTotal = function (v) { return num(total ? (v / total) * 100 : 0, 1) + '% do total'; };
     var cards = [
-      { rotulo: 'GUT baixa', valor: String(g.classes.baixa), cor: C.verde, corValor: C.escuro },
-      { rotulo: 'GUT média', valor: String(g.classes.media), cor: C.amareloGut, corValor: C.escuro },
-      { rotulo: 'GUT alta', valor: String(g.classes.alta), cor: C.vermelho, corValor: C.vermelho },
-      { rotulo: 'Total de desvios', valor: String(total), cor: C.ardosia, corValor: C.escuro }
+      { rotulo: 'GUT baixa', valor: g.classes.baixa, cor: C.verde, corValor: C.verde, sub: parteTotal(g.classes.baixa) },
+      { rotulo: 'GUT média', valor: g.classes.media, cor: C.amareloGut, corValor: 'B58A00', sub: parteTotal(g.classes.media) },
+      { rotulo: 'GUT alta', valor: g.classes.alta, cor: C.vermelho, corValor: C.vermelho, sub: parteTotal(g.classes.alta) },
+      { rotulo: 'Total de desvios', valor: total, cor: C.ardosia, corValor: C.escuro, sub: '100% · ' + g.periodo }
     ];
-    var cw = (W - 0.6) / 4;
+    var cw = (W - 0.6) / 4, hh = 1.3, yCard = 1.72;
     cards.forEach(function (c, i) {
-      var x = X0 + i * (cw + 0.2), y = 1.72, hh = 1.0;
-      s.addShape('rect', { x: x, y: y, w: cw, h: hh, fill: { color: 'F3F4F6' }, line: { type: 'none' } });
-      s.addShape('rect', { x: x, y: y, w: 0.06, h: hh, fill: { color: c.cor }, line: { type: 'none' } });
-      texto(s, c.rotulo, x + 0.22, y + 0.12, cw - 0.3, 0.25, { fontSize: T.indicadorRotulo });
-      texto(s, c.valor, x + 0.22, y + 0.36, cw - 0.3, 0.5, { fontSize: T.indicadorValor, bold: true, color: c.corValor });
+      var x = X0 + i * (cw + 0.2);
+      s.addShape('roundRect', { x: x, y: yCard, w: cw, h: hh, fill: { color: C.branco }, line: { color: 'D9DCE1', width: 0.75 }, rectRadius: 0.1 });
+      s.addShape('rect', { x: x, y: yCard + 0.2, w: 0.05, h: hh - 0.4, fill: { color: c.cor }, line: { type: 'none' } });
+      s.addShape('ellipse', { x: x + 0.3, y: yCard + 0.2, w: 0.13, h: 0.13, fill: { color: c.cor }, line: { type: 'none' } });
+      texto(s, c.rotulo.toLocaleUpperCase('pt-BR'), x + 0.52, yCard + 0.16, cw - 0.7, 0.25, { fontSize: T.indicadorRotulo, color: C.medio, bold: true });
+      texto(s, String(c.valor), x + 0.3, yCard + 0.42, cw - 0.5, 0.5, { fontSize: 30, bold: true, color: c.corValor });
+      texto(s, c.sub, x + 0.3, yCard + 0.94, cw - 0.5, 0.22, { fontSize: T.indicadorSub, color: C.medio });
     });
 
-    texto(s, 'Quantidade de desvios por valor de GUT', X0, 2.95, W, 0.3, { fontSize: T.secao, color: C.texto });
+    texto(s, 'Quantidade de desvios por valor de GUT', X0, 3.27, W, 0.3, { fontSize: T.secao, color: C.texto });
     var guts = g.porGut.map(function (x) { return String(x.gut); });
     var porClasse = function (cl) { return g.porGut.map(function (x) { return classeGut(x.gut) === cl ? x.valor : 0; }); };
     addGrafico(s, ctx, [
       { name: 'GUT baixa (3 a 6)', labels: guts, values: porClasse('baixa'), cor: C.verde },
       { name: 'GUT média (7 a 11)', labels: guts, values: porClasse('media'), cor: C.amareloGut },
       { name: 'GUT alta (12 a 15)', labels: guts, values: porClasse('alta'), cor: C.vermelho }
-    ], opcChart({ x: X0, y: 3.3, w: W, h: 4.6, chartColors: [C.verde, C.amareloGut, C.vermelho], showLegend: true, legendPos: 'b',
+    ], opcChart({ x: X0, y: 3.6, w: W, h: 4.3, chartColors: [C.verde, C.amareloGut, C.vermelho], showLegend: true, legendPos: 'b',
       dataLabelFormatCode: '0;-0;;', dataLabelPosition: 'outEnd', dataLabelFontSize: 10, catAxisLabelFontSize: 10, barGapWidthPct: 35 }));
     return s;
   }
@@ -501,8 +504,12 @@
   };
 
   PalcoSlide.prototype.addShape = function (tipo, o) {
-    if (tipo === 'rect') {
-      this.el.appendChild(novoDiv(posicaoCss(o) + 'background:#' + o.fill.color + ';'));
+    if (tipo === 'rect' || tipo === 'roundRect' || tipo === 'ellipse') {
+      var css = posicaoCss(o) + 'box-sizing:border-box;background:#' + o.fill.color + ';';
+      if (o.line && o.line.color) css += 'border:' + (o.line.width || 1) * PT + 'px solid #' + o.line.color + ';';
+      if (tipo === 'roundRect') css += 'border-radius:' + (o.rectRadius || 0) * POL + 'px;';
+      if (tipo === 'ellipse') css += 'border-radius:50%;';
+      this.el.appendChild(novoDiv(css));
     } else if (tipo === 'diamond') {
       // Metade esquerda do losango (ápice à esquerda, base na borda da página), como imagem SVG:
       // o html2canvas não aplica clip-path nem desenha bordas de elementos com largura zero.
@@ -622,7 +629,7 @@
         return {
           type: 'line', label: s.name, data: s.values, borderColor: '#' + (s.cor || C.escuro),
           backgroundColor: '#' + (s.cor || C.escuro), borderWidth: 2, pointRadius: 0, fill: false,
-          order: 1, datalabels: { display: false }
+          borderDash: [7, 5], order: 1, datalabels: { display: false }
         };
       }
       return {

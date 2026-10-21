@@ -266,12 +266,17 @@ table.tabela-okr td { font-size: 14px; background: #f3f4f6; }
 table.tabela-okr td.centro, table.tabela-okr th.centro { text-align: center; }
 .kpi-detalhe { color: var(--red-dk); font-size: 12px; margin-top: 4px; }
 .grade-gut { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
-.kpi-gut { background: #f3f4f6; border-left: 6px solid var(--ink); padding: 14px 18px; }
-.kpi-gut .kpi-valor { margin-top: 2px; }
+.kpi-gut { position: relative; background: #fff; border: 1px solid #d9dce1; border-radius: 10px; padding: 16px 20px 16px 24px; min-height: 118px; }
+.kpi-gut .kpi-faixa { position: absolute; left: 0; top: 18px; bottom: 18px; width: 3px; border-radius: 0 2px 2px 0; }
+.kpi-gut .kpi-topo { display: flex; align-items: center; gap: 8px; }
+.kpi-gut .kpi-dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+.kpi-gut .kpi-rotulo { letter-spacing: .06em; }
+.kpi-gut .kpi-valor { margin-top: 8px; font-size: 34px; font-weight: 700; line-height: 1; }
+.kpi-gut .kpi-sub { margin-top: 8px; font-size: 11px; }
 table.tabela-okr-un { font-size: 12px; }
 table.tabela-okr-un th, table.tabela-okr-un td { padding: 6px 8px; }
 table.tabela-okr-un td.abaixo-meta { background: #f8e1e3; color: var(--red-dk); }
-#pauta .bloco-cab h3 { color: var(--red-dk); }
+#pauta .bloco-cab h3 { color: var(--ink); }
 @media (max-width: 640px) { .grade-gut { grid-template-columns: 1fr 1fr; } }
 .cron-duas { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 24px; }
 .cron-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
