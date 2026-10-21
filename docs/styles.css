@@ -266,10 +266,10 @@ table.tabela-okr td { font-size: 14px; background: #f3f4f6; }
 table.tabela-okr td.centro, table.tabela-okr th.centro { text-align: center; }
 .kpi-detalhe { color: var(--red-dk); font-size: 12px; margin-top: 4px; }
 .grade-gut { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
-.kpi-gut { position: relative; background: #fff; border: 1px solid #d9dce1; border-radius: 10px; padding: 16px 20px 16px 24px; min-height: 118px; }
-.kpi-gut .kpi-faixa { position: absolute; left: 0; top: 18px; bottom: 18px; width: 3px; border-radius: 0 2px 2px 0; }
+.kpi-gut { position: relative; background: #fff; border: 1px solid #d9dce1; border-radius: 10px; padding: 16px 20px 16px 44px; min-height: 118px; }
+/* triângulo apontando para a direita, base colada na borda esquerda do card, centrado na altura (~65%) */
+.kpi-gut .kpi-tri { position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 22px; height: 65%; clip-path: polygon(0 0, 100% 50%, 0 100%); }
 .kpi-gut .kpi-topo { display: flex; align-items: center; gap: 8px; }
-.kpi-gut .kpi-dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
 .kpi-gut .kpi-rotulo { letter-spacing: .06em; }
 .kpi-gut .kpi-valor { margin-top: 8px; font-size: 34px; font-weight: 700; line-height: 1; }
 .kpi-gut .kpi-sub { margin-top: 8px; font-size: 11px; }

@@ -182,11 +182,13 @@
     cards.forEach(function (c, i) {
       var x = X0 + i * (cw + 0.2);
       s.addShape('roundRect', { x: x, y: yCard, w: cw, h: hh, fill: { color: C.branco }, line: { color: 'D9DCE1', width: 0.75 }, rectRadius: 0.1 });
-      s.addShape('rect', { x: x, y: yCard + 0.2, w: 0.05, h: hh - 0.4, fill: { color: c.cor }, line: { type: 'none' } });
-      s.addShape('ellipse', { x: x + 0.3, y: yCard + 0.2, w: 0.13, h: 0.13, fill: { color: c.cor }, line: { type: 'none' } });
-      texto(s, c.rotulo.toLocaleUpperCase('pt-BR'), x + 0.52, yCard + 0.16, cw - 0.7, 0.25, { fontSize: T.indicadorRotulo, color: C.medio, bold: true });
-      texto(s, String(c.valor), x + 0.3, yCard + 0.42, cw - 0.5, 0.5, { fontSize: 30, bold: true, color: c.corValor });
-      texto(s, c.sub, x + 0.3, yCard + 0.94, cw - 0.5, 0.22, { fontSize: T.indicadorSub, color: C.medio });
+      // Triângulo (seta para a direita) colado na borda esquerda, centrado na altura do card (~65%).
+      // Forma nativa 'triangle' girada 90°: w e h são as medidas antes da rotação.
+      var tw = 0.22, th = hh * 0.65, tcx = x + tw / 2, tcy = yCard + hh / 2;
+      s.addShape('triangle', { x: tcx - th / 2, y: tcy - tw / 2, w: th, h: tw, rotate: 90, fill: { color: c.cor }, line: { type: 'none' } });
+      texto(s, c.rotulo.toLocaleUpperCase('pt-BR'), x + 0.42, yCard + 0.16, cw - 0.6, 0.25, { fontSize: T.indicadorRotulo, color: C.medio, bold: true });
+      texto(s, String(c.valor), x + 0.42, yCard + 0.42, cw - 0.6, 0.5, { fontSize: 30, bold: true, color: c.corValor });
+      texto(s, c.sub, x + 0.42, yCard + 0.94, cw - 0.6, 0.22, { fontSize: T.indicadorSub, color: C.medio });
     });
 
     texto(s, 'Quantidade de desvios por classe de GUT', X0, 3.27, W, 0.3, { fontSize: T.secao, color: C.texto });
@@ -199,7 +201,7 @@
       { name: 'GUT média (7 a 11)', labels: cats, values: porClasse('media'), cor: C.amareloGut },
       { name: 'GUT alta (12 a 15)', labels: cats, values: porClasse('alta'), cor: C.vermelho }
     ], opcChart({ x: X0, y: 3.6, w: W, h: 4.3, chartColors: [C.verde, C.amareloGut, C.vermelho], showLegend: true, legendPos: 'b',
-      dataLabelFormatCode: '0;-0;;', dataLabelPosition: 'outEnd', dataLabelFontSize: 10, catAxisLabelFontSize: 10, barGapWidthPct: 35 }));
+      dataLabelFormatCode: '0;-0;;', dataLabelPosition: 'outEnd', dataLabelFontSize: 10, catAxisLabelFontSize: 10, barGapWidthPct: 35, semQuebraRotulos: true }));
     return s;
   }
 
@@ -508,6 +510,16 @@
       if (tipo === 'roundRect') css += 'border-radius:' + (o.rectRadius || 0) * POL + 'px;';
       if (tipo === 'ellipse') css += 'border-radius:50%;';
       this.el.appendChild(novoDiv(css));
+    } else if (tipo === 'triangle' && o.rotate === 90) {
+      // Triângulo apontando para a direita (base à esquerda): o retângulo visual tem largura o.h e altura o.w
+      var tw = o.h * POL, th = o.w * POL, tx = (o.x + o.w / 2 - o.h / 2) * POL, ty = (o.y + o.h / 2 - o.w / 2) * POL;
+      var svgT = '<svg xmlns="http://www.w3.org/2000/svg" width="' + tw + '" height="' + th + '" viewBox="0 0 ' + tw + ' ' + th + '">' +
+        '<polygon points="0,0 ' + tw + ',' + (th / 2) + ' 0,' + th + '" fill="#' + o.fill.color + '"/></svg>';
+      var imgT = document.createElement('img');
+      imgT.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svgT);
+      imgT.alt = '';
+      imgT.style.cssText = 'position:absolute;left:' + tx + 'px;top:' + ty + 'px;width:' + tw + 'px;height:' + th + 'px;';
+      this.el.appendChild(imgT);
     } else if (tipo === 'diamond') {
       // Metade esquerda do losango (ápice à esquerda, base na borda da página), como imagem SVG:
       // o html2canvas não aplica clip-path nem desenha bordas de elementos com largura zero.
@@ -619,7 +631,7 @@
     var empilhado = o.barGrouping === 'stacked';
     var cores = o.chartColors || [];
     var central = o.dataLabelPosition === 'ctr';
-    var labels = series[0].labels.map(quebrarRotulo);
+    var labels = o.semQuebraRotulos ? series[0].labels.slice() : series[0].labels.map(quebrarRotulo);
 
     var datasets = series.map(function (s, i) {
       if (s.linha) {

@@ -382,11 +382,10 @@
     const total = g.classes.baixa + g.classes.media + g.classes.alta;
     const area1 = area('alto', 'Gráfico de colunas: quantidade de desvios por valor de GUT, coloridas por classe (baixa, média e alta)');
     grafico(area1.canvas, chartGutClasses(g));
-    // Cartão: faixa fina e ponto na cor da classe; número na cor da classe (amarelo escurecido para leitura); % do total
+    // Cartão: triângulo (seta para a direita) na borda esquerda, na cor da classe; número na cor da classe (amarelo escurecido para leitura); % do total
     const cartao = (rotulo, valor, cor, corValor, sub) => h('div', { class: 'kpi-gut' },
-      h('span', { class: 'kpi-faixa', style: 'background:' + cor }),
+      h('span', { class: 'kpi-tri', style: 'background:' + cor }),
       h('div', { class: 'kpi-topo' },
-        h('i', { class: 'kpi-dot', style: 'background:' + cor }),
         h('span', { class: 'kpi-rotulo' }, rotulo)),
       h('div', { class: 'kpi-valor', style: 'color:' + corValor }, fmt(valor)),
       h('div', { class: 'kpi-sub' }, sub));
