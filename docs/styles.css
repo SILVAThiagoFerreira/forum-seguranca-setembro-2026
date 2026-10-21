@@ -265,6 +265,14 @@ table.tabela-okr th { background: var(--ink); color: #fff; font-size: 12px; }
 table.tabela-okr td { font-size: 14px; background: #f3f4f6; }
 table.tabela-okr td.centro, table.tabela-okr th.centro { text-align: center; }
 .kpi-detalhe { color: var(--red-dk); font-size: 12px; margin-top: 4px; }
+.grade-gut { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
+.kpi-gut { background: #f3f4f6; border-left: 6px solid var(--ink); padding: 14px 18px; }
+.kpi-gut .kpi-valor { margin-top: 2px; }
+table.tabela-okr-un { font-size: 12px; }
+table.tabela-okr-un th, table.tabela-okr-un td { padding: 6px 8px; }
+table.tabela-okr-un td.abaixo-meta { background: #f8e1e3; color: var(--red-dk); }
+#pauta .bloco-cab h3 { color: var(--red-dk); }
+@media (max-width: 640px) { .grade-gut { grid-template-columns: 1fr 1fr; } }
 .cron-duas { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 24px; }
 .cron-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
 .cron-item { display: flex; align-items: center; gap: 14px; padding: 10px 14px; background: #f3f4f6; min-height: 62px; }

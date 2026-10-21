@@ -6,13 +6,10 @@
   'use strict';
 
   window.DADOS_REFERENCIA = {
-    // 3.webp - Nº desvios por GUT, resultados das auditorias, 08/2026
+    // 3.webp - Nº desvios por GUT. O revisor informou que os dados são de setembro de 2026.
+    // Total = soma das classes (321 + 166 + 9 = 496; a imagem de origem trazia 373, valor não reconciliado).
     gut: {
-      periodo: 'agosto de 2026',
-      conformes: { valor: 355, pct: '94,7%' },
-      naoConformes: { valor: 9, pct: '5,3%' },
-      totalGut: { valor: 373, pct: '100%' },
-      indiceConformidade: '94,7%',
+      periodo: 'setembro de 2026',
       classes: { baixa: 321, media: 166, alta: 9 },
       // Classes: Baixa = GUT 3 a 6; Média = GUT 7 a 11; Alta = GUT 12 a 15
       porGut: [
@@ -20,21 +17,7 @@
         { gut: 7, valor: 91 }, { gut: 8, valor: 36 }, { gut: 9, valor: 21 }, { gut: 10, valor: 13 },
         { gut: 11, valor: 5 }, { gut: 12, valor: 5 }, { gut: 13, valor: 1 }, { gut: 14, valor: 2 },
         { gut: 15, valor: 1 }
-      ],
-      naoConformesPorGut: [
-        { gut: 12, valor: 5 }, { gut: 13, valor: 1 }, { gut: 14, valor: 2 }, { gut: 15, valor: 1 }
-      ],
-      categoria: {
-        gerencia: 'GERÊNCIA MINERAÇÃO - UNDERGROUND/NORDESTE',
-        total: 9,
-        unidades: [
-          { nome: 'US NEXA ARIPUANÃ', valor: 3 },
-          { nome: 'US ATLANTIC NICKEL - OP', valor: 2 },
-          { nome: 'US VANÁDIO', valor: 2 },
-          { nome: 'US PA GOLD', valor: 1 },
-          { nome: 'US VALE VERDE', valor: 1 }
-        ]
-      }
+      ]
     },
 
     // 2.png - OKR 2026, Gerência Mineração - Underground/Nordeste
@@ -52,8 +35,10 @@
       ]
     },
 
-    // 6.webp - Cronograma de apresentação (status 'ok' = check; 'nao_houve'; 'pendente' = sem check)
+    // 6.webp - Cronograma de apresentação (status 'ok' = check; 'nao_houve'; 'pendente' = sem check).
+    // Janeiro: não há apresentador em nenhuma aba da planilha (verificado); fica como "sem registro".
     cronograma: [
+      { mes: 'Janeiro', ano: 2026, nome: null, unidade: null, status: 'sem_registro' },
       { mes: 'Fevereiro', ano: 2026, nome: 'Henrique Gama', unidade: 'US Vale Verde', status: 'ok' },
       { mes: 'Março', ano: 2026, nome: 'Bruna Matos', unidade: 'US Jacobina', status: 'ok' },
       { mes: 'Abril', ano: 2026, nome: 'Valdivino', unidade: 'US Vanádio', status: 'ok' },

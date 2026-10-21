@@ -8,7 +8,7 @@
   var C = {
     branco: 'FFFFFF', vermelho: 'B5121B', escuro: '3E4349', texto: '3E4349',
     medio: '8A9098', linha: 'C4C8CD', rosa: 'E3B5B9', cinza: '8A9098',
-    ardosia: '3D4248', alerta: 'B5121B', claro: 'C3C6CB'
+    ardosia: '3D4248', alerta: 'B5121B', claro: 'C3C6CB', verde: '1E7A46', amareloGut: 'E8B400'
   };
   // Tamanhos de fonte em pontos (reduzidos em relação à versão anterior)
   var T = {
@@ -169,16 +169,16 @@
     ], o);
   }
 
-  // Nº desvios por GUT: cartões, classes, gráfico por GUT, não conformes e tabela por categoria
+  // Nº desvios por GUT: cartões por classe (baixa verde, média amarela, alta vermelha) e total; gráfico por valor de GUT
   function laminaGut(pptx, ctx, d) {
     var g = d.gut;
-    var s = lamina(pptx, ctx, { titulo: "Nº desvios por GUT - resultados das auditorias - 08/2026",
-      sub: 'Dados referentes ao mês de ' + g.periodo + '.' });
+    var total = g.classes.baixa + g.classes.media + g.classes.alta;
+    var s = lamina(pptx, ctx, { titulo: 'Nº desvios por GUT', sub: 'Dados referentes ao mês de ' + g.periodo + '.' });
     var cards = [
-      { rotulo: 'Conformes', valor: String(g.conformes.valor), sub: g.conformes.pct, cor: C.ardosia },
-      { rotulo: 'Não conformes', valor: String(g.naoConformes.valor), sub: g.naoConformes.pct, cor: C.vermelho },
-      { rotulo: "Total de GUT's", valor: String(g.totalGut.valor), sub: g.totalGut.pct, cor: C.ardosia },
-      { rotulo: 'Índice de conformidade', valor: g.indiceConformidade, sub: '', cor: C.ardosia }
+      { rotulo: 'GUT baixa', valor: String(g.classes.baixa), cor: C.verde, corValor: C.escuro },
+      { rotulo: 'GUT média', valor: String(g.classes.media), cor: C.amareloGut, corValor: C.escuro },
+      { rotulo: 'GUT alta', valor: String(g.classes.alta), cor: C.vermelho, corValor: C.vermelho },
+      { rotulo: 'Total de desvios', valor: String(total), cor: C.ardosia, corValor: C.escuro }
     ];
     var cw = (W - 0.6) / 4;
     cards.forEach(function (c, i) {
@@ -186,56 +186,44 @@
       s.addShape('rect', { x: x, y: y, w: cw, h: hh, fill: { color: 'F3F4F6' }, line: { type: 'none' } });
       s.addShape('rect', { x: x, y: y, w: 0.06, h: hh, fill: { color: c.cor }, line: { type: 'none' } });
       texto(s, c.rotulo, x + 0.22, y + 0.12, cw - 0.3, 0.25, { fontSize: T.indicadorRotulo });
-      texto(s, c.valor, x + 0.22, y + 0.36, cw - 0.3, 0.4, { fontSize: T.indicadorValor, bold: true, color: c.cor });
-      if (c.sub) texto(s, c.sub, x + 0.22, y + 0.74, cw - 0.3, 0.22, { fontSize: T.indicadorSub, color: C.medio });
+      texto(s, c.valor, x + 0.22, y + 0.36, cw - 0.3, 0.5, { fontSize: T.indicadorValor, bold: true, color: c.corValor });
     });
 
-    var py = 2.95, wEsq = 5.0, xMeio = X0 + wEsq + 0.25, wMeio = 3.5, xDir = xMeio + wMeio + 0.25, wDir = X0 + W - xDir;
-    var baseG = py + 1.2;
-    texto(s, 'Nº desvios por GUT', X0, py, wEsq, 0.3, { fontSize: T.secao, color: C.texto });
-    var classes = [['Baixa', g.classes.baixa, C.ardosia], ['Média', g.classes.media, C.cinza], ['Alta', g.classes.alta, C.vermelho]];
-    var cwc = wEsq / 3;
-    classes.forEach(function (c, i) {
-      texto(s, String(c[1]), X0 + i * cwc, py + 0.36, cwc - 0.1, 0.4, { fontSize: T.indicadorValor - 4, bold: true, color: c[2] });
-      texto(s, c[0], X0 + i * cwc, py + 0.78, cwc - 0.1, 0.25, { fontSize: T.rotulo, color: C.texto });
-    });
+    texto(s, 'Quantidade de desvios por valor de GUT', X0, 2.95, W, 0.3, { fontSize: T.secao, color: C.texto });
     var guts = g.porGut.map(function (x) { return String(x.gut); });
     var porClasse = function (cl) { return g.porGut.map(function (x) { return classeGut(x.gut) === cl ? x.valor : 0; }); };
     addGrafico(s, ctx, [
-      { name: 'Baixa', labels: guts, values: porClasse('baixa'), cor: C.ardosia },
-      { name: 'Média', labels: guts, values: porClasse('media'), cor: C.cinza },
-      { name: 'Alta', labels: guts, values: porClasse('alta'), cor: C.vermelho }
-    ], opcChart({ x: X0, y: baseG, w: wEsq, h: 7.85 - baseG, chartColors: [C.ardosia, C.cinza, C.vermelho], showLegend: false,
-      dataLabelFormatCode: '0;-0;;', dataLabelPosition: 'outEnd', dataLabelFontSize: 9, catAxisLabelFontSize: 9, barGapWidthPct: 35 }));
+      { name: 'GUT baixa (3 a 6)', labels: guts, values: porClasse('baixa'), cor: C.verde },
+      { name: 'GUT média (7 a 11)', labels: guts, values: porClasse('media'), cor: C.amareloGut },
+      { name: 'GUT alta (12 a 15)', labels: guts, values: porClasse('alta'), cor: C.vermelho }
+    ], opcChart({ x: X0, y: 3.3, w: W, h: 4.6, chartColors: [C.verde, C.amareloGut, C.vermelho], showLegend: true, legendPos: 'b',
+      dataLabelFormatCode: '0;-0;;', dataLabelPosition: 'outEnd', dataLabelFontSize: 10, catAxisLabelFontSize: 10, barGapWidthPct: 35 }));
+    return s;
+  }
 
-    texto(s, 'Não conformes por GUT', xMeio, py, wMeio, 0.3, { fontSize: T.secao, color: C.texto });
-    addGrafico(s, ctx, [{ name: 'Não conformes', labels: g.naoConformesPorGut.map(function (x) { return String(x.gut); }),
-      values: g.naoConformesPorGut.map(function (x) { return x.valor; }), cor: C.vermelho }],
-      opcChart({ x: xMeio, y: py + 0.5, w: wMeio, h: 7.85 - (py + 0.5), chartColors: [C.vermelho], showLegend: false,
-        dataLabelFormatCode: '0', dataLabelPosition: 'outEnd', valAxisMinVal: 0, valAxisMaxVal: 6, barGapWidthPct: 50, catAxisLabelFontSize: 9 }));
-
-    var cat = g.categoria, maxU = Math.max.apply(null, cat.unidades.map(function (u) { return u.valor; }));
-    texto(s, 'Nº desvios por categoria', xDir, py, wDir, 0.3, { fontSize: T.secao, color: C.texto });
-    var ty = py + 0.4;
-    s.addShape('rect', { x: xDir, y: ty, w: wDir, h: 0.36, fill: { color: 'F3F4F6' }, line: { type: 'none' } });
-    texto(s, 'Gerência', xDir + 0.12, ty + 0.09, 2.0, 0.22, { fontSize: T.tabela, bold: true, color: C.texto });
-    texto(s, 'Desvios', xDir + wDir - 1.0, ty + 0.09, 0.88, 0.22, { fontSize: T.tabela, bold: true, color: C.texto, align: 'right' });
-    ty += 0.36;
-    s.addShape('rect', { x: xDir, y: ty, w: wDir, h: 0.56, fill: { color: 'EDEFF2' }, line: { type: 'none' } });
-    texto(s, cat.gerencia, xDir + 0.12, ty + 0.12, wDir - 1.1, 0.42, { fontSize: 9, bold: true, color: C.escuro });
-    texto(s, String(cat.total), xDir + wDir - 0.9, ty + 0.14, 0.78, 0.25, { fontSize: 10, bold: true, color: C.escuro, align: 'right' });
-    ty += 0.56;
-    cat.unidades.forEach(function (u) {
-      texto(s, u.nome, xDir + 0.12, ty + 0.16, 1.95, 0.25, { fontSize: 9, color: C.texto });
-      s.addShape('rect', { x: xDir + 2.1, y: ty + 0.2, w: 0.75, h: 0.1, fill: { color: 'E5E7EB' }, line: { type: 'none' } });
-      s.addShape('rect', { x: xDir + 2.1, y: ty + 0.2, w: 0.75 * u.valor / maxU, h: 0.1, fill: { color: C.ardosia }, line: { type: 'none' } });
-      texto(s, String(u.valor), xDir + wDir - 0.45, ty + 0.14, 0.33, 0.25, { fontSize: 10, color: C.escuro, align: 'right' });
-      s.addShape('rect', { x: xDir, y: ty + 0.49, w: wDir, h: 0.01, fill: { color: 'E5E7EB' }, line: { type: 'none' } });
-      ty += 0.5;
-    });
-    s.addShape('rect', { x: xDir, y: ty, w: wDir, h: 0.42, fill: { color: 'EDEFF2' }, line: { type: 'none' } });
-    texto(s, 'Total', xDir + 0.12, ty + 0.1, 1.5, 0.25, { fontSize: 10, bold: true, color: C.escuro });
-    texto(s, String(cat.total), xDir + wDir - 0.9, ty + 0.1, 0.78, 0.25, { fontSize: 10, bold: true, color: C.escuro, align: 'right' });
+  // OKR 2026 - detalhamento por unidade: conclusão mensal (resolvidos ÷ registrados); abaixo da meta em vermelho suave
+  function laminaOkrUnidades(pptx, ctx, d) {
+    var k = d.okr, c = d.desvios.conclusaoUnidades;
+    var s = lamina(pptx, ctx, { titulo: 'OKR 2026 - detalhamento por unidade',
+      sub: 'Conclusão mensal dos planos de ação por unidade de serviço (%). Meta: ' + k.appropriated + '%.' });
+    var abaixo = function (v) { return v !== null && v < k.appropriated; };
+    var celula = function (v, negrito, fundo) {
+      var op = { align: 'center', color: C.escuro, fontSize: 10.5, bold: !!negrito };
+      if (fundo) op.fill = { color: fundo };
+      if (abaixo(v)) { op.fill = { color: 'F8E1E3' }; op.color = C.vermelho; }
+      return { text: v === null ? '–' : num(v, 1) + '%', options: op };
+    };
+    var cab = [{ text: 'Unidade de serviço', options: { bold: true, color: C.branco, fill: { color: C.ardosia }, fontSize: 10.5 } }]
+      .concat(c.meses.map(function (m) { return { text: m, options: { bold: true, color: C.branco, fill: { color: C.ardosia }, align: 'center', fontSize: 10.5 } }; }));
+    var linhas = [cab].concat(c.linhas.map(function (l) {
+      return [{ text: l.nome, options: { color: C.escuro, fontSize: 10.5 } }].concat(l.valores.map(function (v) { return celula(v); }));
+    }));
+    linhas.push([{ text: 'Total (todas as unidades)', options: { bold: true, color: C.escuro, fill: { color: 'EDEFF2' }, fontSize: 10.5 } }]
+      .concat(c.total.map(function (v) { return celula(v, true, 'EDEFF2'); })));
+    var larg0 = 3.2, largMes = (W - larg0) / c.meses.length;
+    s.addTable(linhas, { x: X0, y: 1.8, w: W, colW: [larg0].concat(c.meses.map(function () { return largMes; })),
+      fontFace: FONT, margin: [0.03, 0.05, 0.03, 0.05], border: { type: 'none' }, rowH: 0.36, autoPage: false });
+    texto(s, 'Vermelho: abaixo da meta de ' + k.appropriated + '%. "–": sem desvios registrados no mês.', X0, 7.02, W, 0.5, { fontSize: T.texto });
     return s;
   }
 
@@ -275,7 +263,7 @@
 
   // Cronograma de apresentação: duas colunas de linhas com ícone de calendário e status
   function laminaCronograma(pptx, ctx, d) {
-    var s = lamina(pptx, ctx, { titulo: 'Cronograma - apresentação', sub: 'Fórum de Segurança Enaex 2026' });
+    var s = lamina(pptx, ctx, { titulo: 'Cronograma - apresentação', sub: 'Safety Share' });
     var itens = d.cronograma;
     var metade = Math.floor(itens.length / 2);
     var colW = 6.1, pitch = 0.78, alt = 0.66;
@@ -284,12 +272,13 @@
       col.forEach(function (it, j) {
         var y = 1.95 + j * pitch;
         s.addShape('rect', { x: x, y: y, w: colW, h: alt, fill: { color: 'F3F4F6' }, line: { type: 'none' } });
-        s.addImage({ data: icone('calendario', C.vermelho), x: x + 0.1, y: y + 0.08, w: 0.5, h: 0.5 });
+        s.addImage({ data: icone('calendario', C.verde), x: x + 0.1, y: y + 0.08, w: 0.5, h: 0.5 });
         var partes = [{ text: it.mes + ' ' + it.ano, options: { bold: true, color: C.vermelho } }];
         if (it.status === 'nao_houve') partes.push({ text: ' - Não houve fórum', options: { color: C.escuro } });
+        else if (it.status === 'sem_registro') partes.push({ text: ' - Sem registro na planilha', options: { color: C.escuro } });
         else partes.push({ text: ' - ' + [it.nome, it.unidade].filter(Boolean).join(' - '), options: { color: C.escuro } });
         texto(s, partes, x + 0.75, y + 0.2, colW - 1.4, 0.3, { fontSize: 12 });
-        if (it.status === 'ok') s.addImage({ data: icone('check', C.ardosia), x: x + colW - 0.55, y: y + 0.13, w: 0.4, h: 0.4 });
+        if (it.status === 'ok') s.addImage({ data: icone('check', C.verde), x: x + colW - 0.55, y: y + 0.13, w: 0.4, h: 0.4 });
         if (it.status === 'nao_houve') s.addImage({ data: icone('proibido', C.cinza), x: x + colW - 0.55, y: y + 0.13, w: 0.4, h: 0.4 });
       });
     });
@@ -299,7 +288,7 @@
   // Acumulados Kaizens: barras por unidade (decrescente) e caixa de evolução geral
   function laminaKaizens(pptx, ctx, d) {
     var kz = d.kaizens;
-    var s = lamina(pptx, ctx, { titulo: 'Acumulados Kaizens - outubro de 2024 a agosto de 2026', sub: 'Kaizens acumulados por unidade de serviço.' });
+    var s = lamina(pptx, ctx, { titulo: 'Acumulado de Kaizens', sub: 'Período - Outubro de 2024 a Agosto de 2026' });
     addGrafico(s, ctx, [{ name: 'Kaizens acumulados', labels: kz.unidades.map(function (u) { return u.nome; }),
       values: kz.unidades.map(function (u) { return u.valor; }), cor: C.ardosia }],
       opcChart({ x: X0, y: 1.75, w: W, h: 4.95, chartColors: [C.ardosia], showLegend: false, dataLabelPosition: 'outEnd',
@@ -327,7 +316,7 @@
       var s;
 
       // 1. Pauta (traço vermelho, itens numerados em duas colunas e losango decorativo à direita)
-      s = lamina(pptx, ctx, { titulo: 'PAUTA', sub: d.meta.periodo, destaque: true });
+      s = lamina(pptx, ctx, { titulo: 'PAUTAS DO FÓRUM', sub: d.meta.periodo, destaque: true });
       var metade = Math.ceil(d.pauta.length / 2);
       [d.pauta.slice(0, metade), d.pauta.slice(metade)].forEach(function (col, c) {
         var partes = [];
@@ -425,6 +414,7 @@
       laminaGut(pptx, ctx, d);
       // 7. OKR 2026 (substitui "Indicadores de desvios e planos de ação")
       laminaOkr(pptx, ctx, d);
+      laminaOkrUnidades(pptx, ctx, d);
       // 8. Cronograma de apresentação
       laminaCronograma(pptx, ctx, d);
       // 9. Acumulados Kaizens
@@ -555,7 +545,8 @@
         var op = cel.options || {};
         var td = document.createElement('td');
         td.textContent = cel.text == null ? '' : String(cel.text);
-        td.style.cssText = 'padding:' + preenchimento + ';vertical-align:middle;border:0;text-align:left;' +
+        td.style.cssText = 'padding:' + preenchimento + ';vertical-align:middle;border:0;text-align:' + (op.align || 'left') + ';' +
+          (op.fill ? 'background:#' + op.fill.color + ';' : '') +
           'font-size:' + ((op.fontSize || 10) * PT) + 'px;color:#' + (op.color || C.texto) + ';font-weight:' + (op.bold ? 700 : 400) + ';';
         tr.appendChild(td);
       });

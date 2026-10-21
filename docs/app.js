@@ -9,8 +9,13 @@
     vermelho: '#b5121b',
     ardosia: '#3d4248',
     cinza: '#8b9096',
+    verde: '#1e7a46',
+    amareloGut: '#e8b400',
     grade: 'transparent'
   };
+
+  // Unidades sem técnico de segurança: saem da lâmina de inspeções TST
+  const SEM_TECNICO = /ferbasa|pa gold|vanadio/;
 
   // ---------- utilidades ----------
   const fmt = (n, d = 0) => Number(n).toLocaleString('pt-BR', { minimumFractionDigits: d, maximumFractionDigits: d });
@@ -222,33 +227,13 @@
       type: 'bar',
       data: {
         labels: g.porGut.map((x) => String(x.gut)),
-        datasets: [serie('baixa', COR.ardosia, 'Baixa'), serie('media', COR.cinza, 'Média'), serie('alta', COR.vermelho, 'Alta')]
+        datasets: [serie('baixa', COR.verde, 'Baixa'), serie('media', COR.amareloGut, 'Média'), serie('alta', COR.vermelho, 'Alta')]
       },
       options: configBase({
         plugins: { legend: { display: false } },
         scales: {
           y: { beginAtZero: true, suggestedMax: 280, ticks: { display: false }, grid: { display: false } },
           x: { grid: { display: false }, ticks: { autoSkip: false, font: { size: 10 } } }
-        }
-      })
-    };
-  }
-
-  function chartNaoConformes(lista) {
-    return {
-      type: 'bar',
-      data: {
-        labels: lista.map((x) => String(x.gut)),
-        datasets: [{
-          label: 'Não conformes', data: lista.map((x) => x.valor), backgroundColor: COR.vermelho, borderRadius: 2, maxBarThickness: 48,
-          datalabels: { display: true, anchor: 'end', align: 'end', offset: 2, color: COR.ardosia, font: { size: 10, weight: '700' }, formatter: (x) => fmt(x) }
-        }]
-      },
-      options: configBase({
-        plugins: { legend: { display: false } },
-        scales: {
-          y: { beginAtZero: true, suggestedMax: 6, ticks: { display: false }, grid: { display: false } },
-          x: { grid: { display: false }, ticks: { font: { size: 10 } } }
         }
       })
     };
@@ -309,7 +294,7 @@
     return bloco({
       id: 'pauta',
       kicker: 'Lâmina 1 - Abertura',
-      titulo: 'PAUTA',
+      titulo: 'PAUTAS DO FÓRUM',
       sub: d.meta.periodo,
       corpo: h('div', { class: 'pauta-duas' }, colunas.map((col, c) => h('ol', { class: 'pauta', start: c * metade + 1 }, col.map((p) => h('li', {}, p)))))
     });
@@ -393,49 +378,32 @@
 
   const classeGut = (n) => (n <= 6 ? 'baixa' : (n <= 11 ? 'media' : 'alta'));
 
+  // Nº desvios por GUT: cartões por classe (verde, amarelo, vermelho) e total; gráfico por valor de GUT
   function renderGut(d) {
     const g = d.gut;
-    const area1 = area('', 'Gráfico de colunas agrupadas: desvios por GUT, separados em baixa, média e alta');
+    const total = g.classes.baixa + g.classes.media + g.classes.alta;
+    const area1 = area('alto', 'Gráfico de colunas: quantidade de desvios por valor de GUT, coloridas por classe (baixa, média e alta)');
     grafico(area1.canvas, chartGutClasses(g));
-    const area2 = area('', 'Gráfico de colunas: não conformes por GUT');
-    grafico(area2.canvas, chartNaoConformes(g.naoConformesPorGut));
-    const cat = g.categoria;
-    const maxU = Math.max(...cat.unidades.map((u) => u.valor));
-    const linhasCat = cat.unidades.map((u) => h('tr', {},
-      h('td', {}, u.nome),
-      h('td', {}, h('div', { class: 'mini' }, h('i', { style: 'width:' + (u.valor / maxU * 100) + '%' }))),
-      h('td', { class: 'num' }, fmt(u.valor))));
-    const tabelaCat = h('table', { class: 'tabela' },
-      h('thead', {}, h('tr', {}, h('th', {}, 'Gerência'), h('th', {}), h('th', { class: 'num' }, 'Desvios'))),
-      h('tbody', {},
-        h('tr', { class: 'grupo' }, h('td', { colspan: 2 }, cat.gerencia), h('td', { class: 'num' }, fmt(cat.total))),
-        linhasCat));
+    const cartao = (rotulo, valor, cor) => h('div', { class: 'kpi-gut', style: 'border-left-color:' + cor },
+      h('div', { class: 'kpi-rotulo' }, rotulo),
+      h('div', { class: 'kpi-valor' }, fmt(valor)));
     return bloco({
       id: 'gut',
       kicker: 'Lâmina 6 - Resultados das auditorias (GUT)',
-      titulo: 'Nº desvios por GUT - resultados das auditorias - 08/2026',
+      titulo: 'Nº desvios por GUT',
       sub: 'Dados referentes ao mês de ' + g.periodo + '.',
       corpo: h('div', {},
-        h('div', { class: 'grade-kpi' },
-          kpi({ rotulo: 'Conformes', valor: fmt(g.conformes.valor), sub: g.conformes.pct }),
-          kpi({ rotulo: 'Não conformes', valor: fmt(g.naoConformes.valor), sub: g.naoConformes.pct, cor: 'vermelho' }),
-          kpi({ rotulo: "Total de GUT's", valor: fmt(g.totalGut.valor), sub: g.totalGut.pct }),
-          kpi({ rotulo: 'Índice de conformidade', valor: g.indiceConformidade })),
-        h('div', { class: 'grade-3' },
-          h('div', {},
-            h('h4', { class: 'sub-bloco' }, 'Nº desvios por GUT'),
-            h('div', { class: 'classes-gut' },
-              h('div', { class: 'baixa' }, h('b', {}, fmt(g.classes.baixa)), h('span', {}, 'Baixa')),
-              h('div', { class: 'media' }, h('b', {}, fmt(g.classes.media)), h('span', {}, 'Média')),
-              h('div', { class: 'alta' }, h('b', {}, fmt(g.classes.alta)), h('span', {}, 'Alta'))),
-            area1.caixa),
-          h('div', {},
-            h('h4', { class: 'sub-bloco' }, 'Não conformes por GUT'),
-            area2.caixa),
-          h('div', {},
-            h('h4', { class: 'sub-bloco' }, 'Nº desvios por categoria'),
-            h('div', { class: 'tabela-wrap' }, tabelaCat)))
-      )
+        h('div', { class: 'grade-gut' },
+          cartao('GUT baixa', g.classes.baixa, COR.verde),
+          cartao('GUT média', g.classes.media, COR.amareloGut),
+          cartao('GUT alta', g.classes.alta, COR.vermelho),
+          cartao('Total de desvios', total, COR.ardosia)),
+        h('h4', { class: 'sub-bloco' }, 'Quantidade de desvios por valor de GUT'),
+        area1.caixa,
+        h('p', { class: 'legenda-manual' },
+          h('i', { style: 'background:' + COR.verde }), 'GUT baixa (3 a 6)',
+          h('i', { style: 'background:' + COR.amareloGut }), 'GUT média (7 a 11)',
+          h('i', { style: 'background:' + COR.vermelho }), 'GUT alta (12 a 15)'))
     });
   }
 
@@ -465,15 +433,38 @@
     });
   }
 
+  // OKR 2026 - detalhamento por unidade: conclusão mensal (resolvidos ÷ registrados), abaixo da meta em vermelho suave
+  function renderOkrUnidades(d) {
+    const k = d.okr;
+    const c = d.desvios.conclusaoUnidades;
+    const abaixo = (v) => v !== null && v < k.appropriated;
+    const celula = (v) => h('td', { class: 'centro' + (abaixo(v) ? ' abaixo-meta' : '') }, v === null ? '–' : fmt(v, 1) + '%');
+    const cabecalho = h('tr', {}, h('th', {}, 'Unidade de serviço'), c.meses.map((m) => h('th', { class: 'centro' }, m)));
+    const linhas = c.linhas.map((l) => h('tr', {}, h('td', {}, l.nome), l.valores.map((v) => celula(v))));
+    const linhaTotal = h('tr', { class: 'grupo' }, h('td', {}, 'Total (todas as unidades)'), c.total.map((v) => celula(v)));
+    return bloco({
+      id: 'okr-unidades',
+      kicker: 'Lâmina 7 - OKR 2026 (detalhamento)',
+      titulo: 'OKR 2026 - detalhamento por unidade',
+      sub: 'Conclusão mensal dos planos de ação por unidade de serviço (%). Meta: ' + k.appropriated + '%.',
+      corpo: h('div', {},
+        h('div', { class: 'tabela-wrap' }, h('table', { class: 'tabela tabela-okr-un' },
+          h('thead', {}, cabecalho),
+          h('tbody', {}, linhas, linhaTotal))),
+        h('p', { class: 'nota' }, 'Vermelho: abaixo da meta de ' + k.appropriated + '%. "–": sem desvios registrados no mês.'))
+    });
+  }
+
   function renderCronograma(d) {
     const itens = d.cronograma;
     const metade = Math.floor(itens.length / 2);
     const linha = (it) => {
-      const detalhe = it.status === 'nao_houve' ? 'Não houve fórum' : [it.nome, it.unidade].filter(Boolean).join(' - ');
-      const status = it.status === 'ok' ? window.iconeLamina('check', COR.ardosia)
+      const detalhe = it.status === 'nao_houve' ? 'Não houve fórum'
+        : (it.status === 'sem_registro' ? 'Sem registro na planilha' : [it.nome, it.unidade].filter(Boolean).join(' - '));
+      const status = it.status === 'ok' ? window.iconeLamina('check', COR.verde)
         : (it.status === 'nao_houve' ? window.iconeLamina('proibido', COR.cinza) : null);
       return h('li', { class: 'cron-item' },
-        h('img', { class: 'cron-cal', src: window.iconeLamina('calendario', COR.vermelho), alt: '' }),
+        h('img', { class: 'cron-cal', src: window.iconeLamina('calendario', COR.verde), alt: '' }),
         h('span', { class: 'cron-texto' }, h('b', {}, it.mes + ' ' + it.ano), ' - ', detalhe),
         status ? h('img', { class: 'cron-status', src: status, alt: '' }) : null);
     };
@@ -481,7 +472,7 @@
       id: 'cronograma',
       kicker: 'Lâmina 8 - Cronograma',
       titulo: 'Cronograma - apresentação',
-      sub: 'Fórum de Segurança Enaex 2026',
+      sub: 'Safety Share',
       corpo: h('div', { class: 'cron-duas' },
         h('ul', { class: 'cron-lista' }, itens.slice(0, metade).map(linha)),
         h('ul', { class: 'cron-lista' }, itens.slice(metade).map(linha)))
@@ -495,8 +486,8 @@
     return bloco({
       id: 'kaizens',
       kicker: 'Lâmina 9 - Kaizens',
-      titulo: 'Acumulados Kaizens - outubro de 2024 a agosto de 2026',
-      sub: 'Kaizens acumulados por unidade de serviço.',
+      titulo: 'Acumulado de Kaizens',
+      sub: 'Período - Outubro de 2024 a Agosto de 2026',
       corpo: h('div', {},
         area1.caixa,
         h('div', { class: 'caixa-evolucao' },
@@ -530,6 +521,7 @@
     ['auditorias', 'Auditorias VCT'],
     ['gut', 'Desvios GUT'],
     ['okr', 'OKR'],
+    ['okr-unidades', 'OKR por unidade'],
     ['cronograma', 'Cronograma'],
     ['kaizens', 'Kaizens']
   ];
@@ -552,6 +544,7 @@
       ...(d.auditorias.linhas.length ? [renderComplemento(d.auditorias)] : []),
       renderGut(d),
       renderOkr(d),
+      renderOkrUnidades(d),
       renderCronograma(d),
       renderKaizens(d)
     );
@@ -755,6 +748,26 @@
       const res = soma(resolvidos);
       return { mes: MESES_NOME[c.mes].slice(0, 3), desvios: total, resolvidos: res, conclusao: total ? arred1(res / total * 100) : 0 };
     }).filter(Boolean);
+    // Conclusão por unidade e mês: resolvidos ÷ registrados (mesma regra da série geral). null = sem desvios ou sem dado.
+    const mesesSerie = colsMesDesv.filter((c) => c.mes <= mesDesv);
+    const conclusaoMes = (linhaDes, linhaRes, c) => {
+      const reg = numero(linhaDes ? linhaDes[c.col] : null);
+      const res = numero(linhaRes ? linhaRes[c.col] : null);
+      return reg && res !== null ? arred1(res / reg * 100) : null;
+    };
+    const nomesDesv = [...new Set(linhasDesvios.map((r) => nomeLimpo(r[0])))];
+    const conclusaoUnidades = {
+      meses: mesesSerie.map((c) => MESES_NOME[c.mes].slice(0, 3)),
+      linhas: nomesDesv.map((u) => {
+        const des = linhasDesvios.find((r) => nomeLimpo(r[0]) === u);
+        const res = resolvDesv(u);
+        return { nome: u, valores: mesesSerie.map((c) => conclusaoMes(des, res, c)) };
+      }),
+      total: mesesSerie.map((c) => {
+        const s = serieDesv.find((m) => m.mes === MESES_NOME[c.mes].slice(0, 3));
+        return s ? s.conclusao : null;
+      })
+    };
     const desvios = {
       referencia: MESES_NOME[mesDesv] + ' ' + anoDesv,
       unidades: unidadesDesv,
@@ -762,11 +775,12 @@
       resolvidos: resolvidosDesv,
       pendentes: totalDesv - resolvidosDesv,
       indice: totalDesv ? arred1(resolvidosDesv / totalDesv * 100) : 0,
-      serie: serieDesv
+      serie: serieDesv,
+      conclusaoUnidades: conclusaoUnidades
     };
 
     // Inspeções Mensais de Segurança (TST): Meta (QTD) e Executado (QTD) por unidade; mês = último com execução lançada
-    const ins = abaDe(wb, 'inspecoes').slice(1).filter((r) => r && nomeLimpo(r[2]) && numero(r[4]) !== null);
+    const ins = abaDe(wb, 'inspecoes').slice(1).filter((r) => r && nomeLimpo(r[2]) && numero(r[4]) !== null && !SEM_TECNICO.test(norm(r[2])));
     let inspecoes = null;
     if (ins.length) {
       const chaveIns = (r) => Number(r[0]) * 12 + mesIdx(r[1]);
