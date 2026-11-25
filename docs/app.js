@@ -728,9 +728,19 @@
     const colMesDesv = colsMesDesv.find((c) => c.mes === mesDesv).col;
     const resolvDesv = (u) => linhasDesv.find((r) => nomeLimpo(r[0]) === u && norm(r[1]) === 'resolvidos');
     const pendDesv = (u) => linhasDesv.find((r) => nomeLimpo(r[0]) === u && norm(r[1]) === 'pendentes');
+    // Resolvidos em branco com Desvios e Pendentes lançados: resolvidos = desvios − pendentes
+    // (identidade da própria planilha, que vale na grande maioria das linhas). Sem isso a página inteira falha.
+    const resolvidosDe = (nome, col) => {
+      const res = numero(resolvDesv(nome) ? resolvDesv(nome)[col] : null);
+      if (res !== null) return res;
+      const linhaDes = linhasDesvios.find((r) => nomeLimpo(r[0]) === nome);
+      const des = numero(linhaDes ? linhaDes[col] : null);
+      const pen = numero(pendDesv(nome) ? pendDesv(nome)[col] : null);
+      return des !== null && pen !== null ? des - pen : null;
+    };
     const unidadesDesv = linhasDesvios.filter(r => numero(r[colMesDesv]) !== null).map((r) => {
       const nome = nomeLimpo(r[0]);
-      const resolvidos = numero(resolvDesv(nome) && resolvDesv(nome)[colMesDesv]);
+      const resolvidos = resolvidosDe(nome, colMesDesv);
       const pendentes = numero(pendDesv(nome) && pendDesv(nome)[colMesDesv]);
       return {
         nome: nome,
@@ -744,7 +754,7 @@
     // Série mensal até o mês de referência: resolvidos / registrados (conclusão dos planos de ação)
     const serieDesv = colsMesDesv.filter((c) => c.mes <= mesDesv).map((c) => {
       const registrados = linhasDesvios.map((r) => numero(r[c.col])).filter((v) => v !== null);
-      const resolvidos = linhasDesv.filter((r) => norm(r[1]) === 'resolvidos').map((r) => numero(r[c.col])).filter((v) => v !== null);
+      const resolvidos = linhasDesv.filter((r) => norm(r[1]) === 'resolvidos').map((r) => resolvidosDe(nomeLimpo(r[0]), c.col)).filter((v) => v !== null);
       if (!registrados.length) return null;
       const total = soma(registrados);
       const res = soma(resolvidos);
@@ -752,18 +762,17 @@
     }).filter(Boolean);
     // Conclusão por unidade e mês: resolvidos ÷ registrados (mesma regra da série geral). null = sem desvios ou sem dado.
     const mesesSerie = colsMesDesv.filter((c) => c.mes <= mesDesv);
-    const conclusaoMes = (linhaDes, linhaRes, c) => {
-      const reg = numero(linhaDes ? linhaDes[c.col] : null);
-      const res = numero(linhaRes ? linhaRes[c.col] : null);
+    const conclusaoMes = (nome, c) => {
+      const des = linhasDesvios.find((r) => nomeLimpo(r[0]) === nome);
+      const reg = numero(des ? des[c.col] : null);
+      const res = resolvidosDe(nome, c.col);
       return reg && res !== null ? arred1(res / reg * 100) : null;
     };
     const nomesDesv = [...new Set(linhasDesvios.map((r) => nomeLimpo(r[0])))];
     const conclusaoUnidades = {
       meses: mesesSerie.map((c) => MESES_NOME[c.mes].slice(0, 3)),
       linhas: nomesDesv.map((u) => {
-        const des = linhasDesvios.find((r) => nomeLimpo(r[0]) === u);
-        const res = resolvDesv(u);
-        return { nome: u, valores: mesesSerie.map((c) => conclusaoMes(des, res, c)) };
+        return { nome: u, valores: mesesSerie.map((c) => conclusaoMes(u, c)) };
       }),
       total: mesesSerie.map((c) => {
         const s = serieDesv.find((m) => m.mes === MESES_NOME[c.mes].slice(0, 3));
